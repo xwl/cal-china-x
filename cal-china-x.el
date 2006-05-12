@@ -6,7 +6,7 @@
 ;; Author: Charles Wang <charleswang@peoplemail.com.cn>
 ;; Author: William Xu <william.xwl@gmail.com>
 
-;; $Id: cal-china-x.el, v 0.1 2006/05/11 15:14:02 xwl Exp $
+;; $Id: cal-china-x.el, v 0.11 2006/05/11 15:14:02 xwl Exp $
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,14 +24,13 @@
 
 ;;; Commentary:
 
-;; This package localized calendar display for chinese users, which
-;; means it will make calendar display Chinese characters.
+;; This package localizes calendar display for chinese users, which
+;; means calendar display will be in Chinese.
 
 ;; Put this file into your load-path and the following into your
 ;; ~/.emacs:
 ;;
-;;   (require 'chinese-calendar)
-;;   (cal-china-x-setup)
+;;   (require 'cal-china-x)
 
 ;;; History:
 
@@ -46,7 +45,6 @@
 ;;; TODO:
 
 ;; - Display week day(the first line of each month) in chinese properly
-;; - Make `cal-china-x-birthday-from-chinese' interactive.
 
 ;;; Code:
 
@@ -62,7 +60,7 @@
   ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
 
 (defvar cal-china-x-days
-  ["天" "一" "二" "三" "四" "五" "六"])
+  ["日" "一" "二" "三" "四" "五" "六"])
 
 ;; (defvar solar-n-hemi-seasons
 ;;   '("春分" "夏至" "秋分" "冬至"))
@@ -92,31 +90,29 @@
 
 ;;; High Level Functions
 
-;; TODO: write an interactive version
-(defun cal-china-x-birthday-from-chinese (birthday-chinese)
+(defun cal-china-x-birthday-from-chinese (lunar-month lunar-day)
   "Return birthday date this year in Gregorian form.
 
-BIRTHDAY-CHINESE is a list.  e.g.  '(5 11)"
-  (let* ((current-chinese-date (calendar-chinese-from-absolute
+LUNAR-MONTH and LUNAR-DAY are date number used in chinese lunar
+calendar."
+  (interactive "nlunar month: \nnlunar day: ")
+  (let* ((birthday-chinese (list lunar-month lunar-day))
+	 (current-chinese-date (calendar-chinese-from-absolute
 				(calendar-absolute-from-gregorian
 				 (calendar-current-date))))
 	 (cycle (car current-chinese-date))
 	 (year (cadr current-chinese-date))
-
 	 (birthday-chinese-full `(,cycle ,year ,@birthday-chinese))
 	 (birthday-gregorian-full (calendar-gregorian-from-absolute
 				   (calendar-absolute-from-chinese
 				    birthday-chinese-full))))
-
-    (setq birthday-gregorian `(,(car birthday-gregorian-full)
-			       ,(cadr birthday-gregorian-full)))))
+    (message "Your next birthday in gregorian is on %s"
+	     (calendar-date-string birthday-gregorian-full))))
 
 (defun holiday-chinese (cmonth cday string)
-  "Chinese calendar holiday, month and day in Chinese calendar (CMONTH, CDAY).
-
-If corresponding MONTH and DAY in gregorian calendar is visible,
-the value returned is the list \(((MONTH DAY year) STRING)).
-Returns nil if it is not visible in the current calendar window."
+  "Holiday on month, day (Chinese Lunar) called string.
+If month, day is visible, the value returned is the list (((month day year)
+string)).  Returns nil if it is not visible in the current calendar window."
   (let* ((m displayed-month)
          (y displayed-year)
          (gdate (calendar-gregorian-from-absolute
@@ -125,8 +121,83 @@ Returns nil if it is not visible in the current calendar window."
          (gd (cadr gdate))
          (gy (caddr gdate)))
     (increment-calendar-month m y (- 11 gm))
-    (if (> m 9)
-	(list (list (list gm gd gy) string)))))
+    (when (> m 9)
+      `(((,gm ,gd ,gy) ,string)))))
+
+(defun cal-china-x-setup ()
+  (setq calendar-date-display-form
+	'((cal-china-x-calendar-display-form date)))
+
+  (setq diary-date-forms chinese-date-diary-pattern)
+
+  (setq calendar-mode-line-format
+	(list
+	 (propertize (substitute-command-keys
+		      "\\<calendar-mode-map>\\[scroll-calendar-left]")
+		     'help-echo "mouse-2: scroll left"
+		     'mouse-face 'mode-line-highlight
+		     'keymap (make-mode-line-mouse-map 'mouse-2
+						       'mouse-scroll-calendar-left))
+	 "Calendar"
+	 (concat
+	  (propertize
+	   (substitute-command-keys
+	    "\\<calendar-mode-map>\\[calendar-goto-info-node] info")
+	   'help-echo "mouse-2: read Info on Calendar"
+	   'mouse-face 'mode-line-highlight
+	   'keymap (make-mode-line-mouse-map 'mouse-2 'calendar-goto-info-node))
+	  "/"
+	  (propertize
+	   (substitute-command-keys
+	    "\\<calendar-mode-map>\\[calendar-other-month] other")
+	   'help-echo "mouse-2: choose another month"
+	   'mouse-face 'mode-line-highlight
+	   'keymap (make-mode-line-mouse-map
+		    'mouse-2 'mouse-calendar-other-month))
+	  "/"
+	  (propertize
+	   (substitute-command-keys
+	    "\\<calendar-mode-map>\\[calendar-goto-today] today")
+	   'help-echo "mouse-2: go to today's date"
+	   'mouse-face 'mode-line-highlight
+	   'keymap (make-mode-line-mouse-map 'mouse-2 #'calendar-goto-today)))
+	 '(calendar-date-string date t)
+	 '(cal-china-x-chinese-date-string date)
+	 (propertize (substitute-command-keys
+		      "\\<calendar-mode-map>\\[scroll-calendar-right]")
+		     'help-echo "mouse-2: scroll right"
+		     'mouse-face 'mode-line-highlight
+		     'keymap (make-mode-line-mouse-map
+			      'mouse-2 'mouse-scroll-calendar-right))
+	 ;; FIXME: why should i add this in order to display right '>' ?
+	 ""))
+
+  (add-hook 'calendar-move-hook 'update-calendar-mode-line)
+
+  (setq chinese-calendar-celestial-stem
+	cal-china-x-celestial-stem
+	chinese-calendar-terrestrial-branch
+	cal-china-x-terrestrial-branch)
+
+  (setq local-holidays
+	'((holiday-fixed 1  1  "元旦")
+	  (holiday-chinese-new-year)
+	  (holiday-fixed 3  8  "妇女节")
+	  (holiday-fixed 3  12 "植树节")
+	  (holiday-fixed 5  1  "劳动节")
+	  (holiday-fixed 5  4  "青年节")
+	  (holiday-fixed 6  1  "儿童节")
+	  (holiday-fixed 9  10 "教师节")
+	  (holiday-fixed 10 1  "国庆节")
+	  (holiday-fixed 12 25 "圣诞节")
+
+	  (holiday-chinese 1 15 "元宵节")
+	  (holiday-chinese 5 5  "端午节")
+	  (holiday-chinese 9 9  "重阳节")
+	  (holiday-chinese 8 15 "中秋节")))
+
+  (setq calendar-holidays
+	(append general-holidays local-holidays)))
 
 
 ;;; Low Level Functions
@@ -258,87 +329,13 @@ characters on the line."
            (calendar-insert-indented "" indent)))));; Go to proper spot
 
 
-;;; Setup
-
-(defun cal-china-x-setup ()
-  "Localized calendar to Chinese."
-  (setq calendar-date-display-form
-	'((cal-china-x-calendar-display-form date)))
-
-  (setq diary-date-forms chinese-date-diary-pattern)
-
-  ;; TODO: show holiday one mode line if it's ! in blue?
-  (setq calendar-mode-line-format
-	(list
-	 (propertize (substitute-command-keys
-		      "\\<calendar-mode-map>\\[scroll-calendar-left]")
-		     'help-echo "mouse-2: scroll left"
-		     'mouse-face 'mode-line-highlight
-		     'keymap (make-mode-line-mouse-map 'mouse-2
-						       'mouse-scroll-calendar-left))
-	 "Calendar"
-	 (concat
-	  (propertize
-	   (substitute-command-keys
-	    "\\<calendar-mode-map>\\[calendar-goto-info-node] info")
-	   'help-echo "mouse-2: read Info on Calendar"
-	   'mouse-face 'mode-line-highlight
-	   'keymap (make-mode-line-mouse-map 'mouse-2 'calendar-goto-info-node))
-	  "/"
-	  (propertize
-	   (substitute-command-keys
-	    "\\<calendar-mode-map>\\[calendar-other-month] other")
-	   'help-echo "mouse-2: choose another month"
-	   'mouse-face 'mode-line-highlight
-	   'keymap (make-mode-line-mouse-map
-		    'mouse-2 'mouse-calendar-other-month))
-	  "/"
-	  (propertize
-	   (substitute-command-keys
-	    "\\<calendar-mode-map>\\[calendar-goto-today] today")
-	   'help-echo "mouse-2: go to today's date"
-	   'mouse-face 'mode-line-highlight
-	   'keymap (make-mode-line-mouse-map 'mouse-2 #'calendar-goto-today)))
-	 '(calendar-date-string date t)
-	 '(cal-china-x-chinese-date-string date)
-	 (propertize (substitute-command-keys
-		      "\\<calendar-mode-map>\\[scroll-calendar-right]")
-		     'help-echo "mouse-2: scroll right"
-		     'mouse-face 'mode-line-highlight
-		     'keymap (make-mode-line-mouse-map
-			      'mouse-2 'mouse-scroll-calendar-right))
-	 ;; FIXME: why should i add this in order to display right '>' ?
-	 ""))
-
-  (add-hook 'calendar-move-hook 'update-calendar-mode-line)
-
-  (setq chinese-calendar-celestial-stem
-	cal-china-x-celestial-stem
-	chinese-calendar-terrestrial-branch
-	cal-china-x-terrestrial-branch)
-
-  (setq local-holidays
-	'((holiday-fixed 1  1  "元旦")
-	  (holiday-chinese-new-year)
-	  (holiday-fixed 3  8  "妇女节")
-	  (holiday-fixed 3  12 "植树节")
-	  (holiday-fixed 5  1  "劳动节")
-	  (holiday-fixed 5  4  "青年节")
-	  (holiday-fixed 6  1  "儿童节")
-	  (holiday-fixed 9  10 "教师节")
-	  (holiday-fixed 10 1  "国庆节")
-	  (holiday-fixed 12 25 "圣诞节")
-
-	  (holiday-chinese 1 15 "元宵节")
-	  (holiday-chinese 5 5  "端午节")
-	  (holiday-chinese 9 9  "重阳节")
-	  (holiday-chinese 8 15 "中秋节")))
-
-  (setq calendar-holidays
-	(append general-holidays local-holidays))
-
-  (message "cal-china-x setup done"))
+;; set up
+(cal-china-x-setup)
 
 (provide 'cal-china-x)
 
-;;; chinese-calendar.el ends here
+;;; Local Variables: ***
+;;; coding: utf-8 ***
+;;; End: ***
+
+;;; cal-china-x.el ends here
