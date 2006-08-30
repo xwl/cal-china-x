@@ -6,7 +6,7 @@
 ;; Author: Charles Wang <charleswang@peoplemail.com.cn>
 ;;         William Xu <william.xwl@gmail.com>
 ;; Version: 0.2
-;; Last updated: 2006/08/31 02:46:17
+;; Last updated: 2006/08/31 02:53:40
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -235,13 +235,13 @@ in a week."
   (let* ((a-date (calendar-absolute-from-gregorian date))
          (c-date (calendar-chinese-from-absolute a-date))
          (year (cadr c-date))
-         (month (floor (caddr c-date)))
+         (month (caddr c-date))
          (day (cadddr c-date)))
     (format "%s%s%s年%s%s(%s)"
             (calendar-chinese-sexagesimal-name year)
             (if (integerp month) "" "(润)")
             (cal-china-x-get-zodiac year)
-            (aref cal-china-x-month-name (1-  month))
+            (aref cal-china-x-month-name (1-  (floor month)))
             (aref cal-china-x-day-name (1- day))
             (cal-china-x-get-horoscope (car date) (cadr date)))))
 
