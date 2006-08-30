@@ -4,9 +4,9 @@
 ;; Copyright (C) 2006 William Xu
 
 ;; Author: Charles Wang <charleswang@peoplemail.com.cn>
-;; Author: William Xu <william.xwl@gmail.com>
-
-;; $Id: cal-china-x.el, v 0.11 2006/05/11 15:14:02 xwl Exp $
+;;         William Xu <william.xwl@gmail.com>
+;; Version: 0.2
+;; Last updated: 2006/08/31 02:46:17
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,27 +24,19 @@
 
 ;;; Commentary:
 
-;; This package localizes calendar display for chinese users, which
-;; means calendar display will be in Chinese.
+;; This package adds more chinese calendar supports. Currently, it can
+;; show lunar calendar, horoscope info, zodiac info, etc. Feedbacks are
+;; warmly welcome.
 
 ;; Put this file into your load-path and the following into your
 ;; ~/.emacs:
 ;;
 ;;   (require 'cal-china-x)
 
-;;; History:
-
-;; This package is based on chinese-calendar.el written by Charles Wang
-;; <charleswang@peoplemail.com.cn>. Major changes i've made including:
-
-;; - Reorgize code layout and modify some codes to be more clear
-;; - Remove some unnecessary hooks and functions
-;; - Apply Emacs package prefix naming style
-;; - Add some new functions
-
 ;;; TODO:
 
 ;; - Display week day(the first line of each month) in chinese properly
+;; - hemi-seasons stuffs, 24 in total
 
 ;;; Code:
 
@@ -86,6 +78,25 @@
     (backup day " *" monthname "\\W+\\<\\([^*0-9]\\|\\([0-9]+[:aApP]\\)\\)")
     (day " *" monthname " *" year "[^0-9]")
     (dayname "\\W")))
+
+(defvar cal-china-x-horoscope-name
+  '(((3  21) (4  19) "白羊")
+    ((4  20) (5  20) "金牛")
+    ((5  21) (6  21) "双子")
+    ((6  22) (7  22) "巨蟹")
+    ((7  23) (8  22) "狮子")
+    ((8  23) (9  22) "处女")
+    ((9  23) (10 23) "天秤")
+    ((10 24) (11 22) "天蝎")
+    ((11 23) (12 21) "射手")
+    ((12 22) (1  19) "摩羯")
+    ((1  20) (2  18) "水瓶")
+    ((2  19) (3  20) "双鱼")))
+
+(defvar cal-china-x-zodiac-name
+  ["鼠" "牛" "虎" "兔" "龙" "蛇" "马" "羊" "猴" "鸡" "狗" "猪"]
+  "The zodiac(Sheng Xiao) when you were born.
+Start from year 1984(鼠).")
 
 
 ;;; High Level Functions
@@ -187,6 +198,7 @@ string)).  Returns nil if it is not visible in the current calendar window."
 	  (holiday-fixed 5  1  "劳动节")
 	  (holiday-fixed 5  4  "青年节")
 	  (holiday-fixed 6  1  "儿童节")
+          (holiday-fixed 7  7  "七夕节")
 	  (holiday-fixed 9  10 "教师节")
 	  (holiday-fixed 10 1  "国庆节")
 	  (holiday-fixed 12 25 "圣诞节")
@@ -222,29 +234,30 @@ in a week."
 (defun cal-china-x-chinese-date-string (date)
   (let* ((a-date (calendar-absolute-from-gregorian date))
          (c-date (calendar-chinese-from-absolute a-date))
-         (cycle (car c-date))
-         (year (car (cdr c-date)))
-         (month (car (cdr (cdr c-date))))
-         (day (car (cdr (cdr (cdr c-date)))))
-         (this-month (calendar-absolute-from-chinese
-                      (list cycle year month 1)))
-         (next-month (calendar-absolute-from-chinese
-                      (list (if (= year 60) (1+ cycle) cycle)
-                            (if (= (floor month) 12) (1+ year) year)
-                            (calendar-mod (1+ (floor month)) 12)
-                            1)))
-         (m-cycle (% (+ (* year 5) (floor month)) 60)))
-    (format "农历%s年%s%s%s"
-            ;;cycle
-            ;;year
+         (year (cadr c-date))
+         (month (floor (caddr c-date)))
+         (day (cadddr c-date)))
+    (format "%s%s%s年%s%s(%s)"
             (calendar-chinese-sexagesimal-name year)
-            (if (not (integerp month))
-                "润"
-              (if (< 30 (- next-month this-month))
-                  ""
-                ""))
-            (aref cal-china-x-month-name (1- (floor month)))
-            (aref cal-china-x-day-name (1- day)))))
+            (if (integerp month) "" "(润)")
+            (cal-china-x-get-zodiac year)
+            (aref cal-china-x-month-name (1-  month))
+            (aref cal-china-x-day-name (1- day))
+            (cal-china-x-get-horoscope (car date) (cadr date)))))
+
+(defun cal-china-x-get-horoscope (month day)
+  "Return horoscope on MONTH(1-12) DAY(1-31)."
+  (catch 'return
+    (mapc
+     (lambda (el)
+       (let ((start (car el))
+             (end (cadr el)))
+         (when (or (and (= month (car start))
+                        (>= day (cadr start)))
+                   (and (= month (car end))
+                        (<= day (cadr end))))
+           (throw 'return (caddr el)))))
+     cal-china-x-horoscope-name)))
 
 (defun holiday-chinese-new-year ()
   "Date of Chinese New Year."
@@ -262,6 +275,14 @@ in a week."
 		(format "%s年春节"
 			(calendar-chinese-sexagesimal-name
 			 (+ y 57))))))))))
+
+(defun cal-china-x-get-zodiac (year)
+  "Get zodiac(Sheng Xiao) in YEAR."
+  ;; i remember zobiac by rememering year 1984(鼠, Mouse).
+  (while (< year 1984 )
+    (setq year (+ year 12)))
+  (aref cal-china-x-zodiac-name
+        (mod (mod year 1984) 12)))
 
 
 ;;; Modifications to Standard Functions
