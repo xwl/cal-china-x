@@ -6,7 +6,7 @@
 ;; Author: Charles Wang <charleswang@peoplemail.com.cn>
 ;;         William Xu <william.xwl@gmail.com>
 ;; Version: 0.2
-;; Last updated: 2006/08/31 03:07:24
+;; Last updated: 2006/08/31 03:17:32
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -95,8 +95,7 @@
 
 (defvar cal-china-x-zodiac-name
   ["鼠" "牛" "虎" "兔" "龙" "蛇" "马" "羊" "猴" "鸡" "狗" "猪"]
-  "The zodiac(Sheng Xiao) when you were born.
-Start from year 1984(鼠).")
+  "The zodiac(Sheng Xiao) when you were born.")
 
 
 ;;; High Level Functions
@@ -278,7 +277,7 @@ in a week."
 
 (defun cal-china-x-get-zodiac (year)
   "Get zodiac(Sheng Xiao) in YEAR."
-  ;; i remember zobiac by rememering year 1984(鼠, Mouse).
+  ;; i remember zobiac by remembering year 1984(鼠, Mouse).
   (while (< year 1984 )
     (setq year (+ year 12)))
   (aref cal-china-x-zodiac-name
