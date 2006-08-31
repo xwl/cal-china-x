@@ -6,7 +6,7 @@
 ;; Author: Charles Wang <charleswang@peoplemail.com.cn>
 ;;         William Xu <william.xwl@gmail.com>
 ;; Version: 0.2
-;; Last updated: 2006/08/31 03:17:32
+;; Last updated: 2006/08/31 21:04:20
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -37,6 +37,8 @@
 
 ;; - Display week day(the first line of each month) in chinese properly
 ;; - hemi-seasons stuffs, 24 in total
+;; - possible bug in `holiday-chinese', since it doesn't know 2006.08.30
+;;   is another Qi Xi festival
 
 ;;; Code:
 
@@ -197,13 +199,13 @@ string)).  Returns nil if it is not visible in the current calendar window."
 	  (holiday-fixed 5  1  "劳动节")
 	  (holiday-fixed 5  4  "青年节")
 	  (holiday-fixed 6  1  "儿童节")
-          (holiday-fixed 7  7  "七夕节")
 	  (holiday-fixed 9  10 "教师节")
 	  (holiday-fixed 10 1  "国庆节")
 	  (holiday-fixed 12 25 "圣诞节")
 
 	  (holiday-chinese 1 15 "元宵节")
 	  (holiday-chinese 5 5  "端午节")
+          (holiday-chinese 7 7  "七夕节")
 	  (holiday-chinese 9 9  "重阳节")
 	  (holiday-chinese 8 15 "中秋节")))
 
