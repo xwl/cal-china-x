@@ -6,7 +6,7 @@
 ;; Author: Charles Wang <charleswang@peoplemail.com.cn>
 ;;         William Xu <william.xwl@gmail.com>
 ;; Version: 0.2
-;; Last updated: 2006/08/31 21:04:20
+;; Last updated: 2006/09/10 11:54:02
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -39,6 +39,8 @@
 ;; - hemi-seasons stuffs, 24 in total
 ;; - possible bug in `holiday-chinese', since it doesn't know 2006.08.30
 ;;   is another Qi Xi festival
+;; - Fix diary display bug. Now it shows "期日". We need to figure out a
+;;   way to let Emacs calendar understand chinese `dayname'.
 
 ;;; Code:
 
@@ -73,7 +75,7 @@
    "卅一" "卅二" "卅三" "卅四" "卅五" "卅六" "卅七" "卅八" "卅九" "卅十"])
 
 (defvar chinese-date-diary-pattern
-  '((year " *年" month " *月" day "日 *[^/年0-9]")
+  '((year " *年" month " *月" day " *日 *[^\年0-9]") ; " *星期")
     (year "-" month "-" day "[^0-9]")
     (day "/" month "[^/0-9]")
     (day "/" month "/" year "[^0-9]")
@@ -138,7 +140,16 @@ string)).  Returns nil if it is not visible in the current calendar window."
 
 (defun cal-china-x-setup ()
   (setq calendar-date-display-form
-	'((cal-china-x-calendar-display-form date)))
+	'(
+          (cal-china-x-calendar-display-form date)
+;           (mapcar 'string-to-number (list month day year)))
+
+;;           (format "%04s年%02s月%02s日 %s"
+
+;;                   (cal-china-x-day-name (list (string-to-number month)
+;;                                               (string-to-number day)
+;;                                               (string-to-number year))))
+))
 
   (setq diary-date-forms chinese-date-diary-pattern)
 
@@ -186,10 +197,8 @@ string)).  Returns nil if it is not visible in the current calendar window."
 
   (add-hook 'calendar-move-hook 'update-calendar-mode-line)
 
-  (setq chinese-calendar-celestial-stem
-	cal-china-x-celestial-stem
-	chinese-calendar-terrestrial-branch
-	cal-china-x-terrestrial-branch)
+  (setq chinese-calendar-celestial-stem cal-china-x-celestial-stem
+	chinese-calendar-terrestrial-branch cal-china-x-terrestrial-branch)
 
   (setq local-holidays
 	'((holiday-fixed 1  1  "元旦")
@@ -226,7 +235,7 @@ in a week."
   (aref cal-china-x-days num))
 
 (defun cal-china-x-calendar-display-form (date)
-  (format "%4d年%2d月%2d日 %s"
+  (format "%04d年%02d月%02d日 %s"
 	  (extract-calendar-year date)
 	  (extract-calendar-month date)
 	  (extract-calendar-day date)
