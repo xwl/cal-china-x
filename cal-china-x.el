@@ -5,8 +5,8 @@
 
 ;; Author: Charles Wang <charleswang@peoplemail.com.cn>
 ;;         William Xu <william.xwl@gmail.com>
-;; Version: 0.2
-;; Last updated: 2006/09/10 11:54:02
+;; Version: 0.3
+;; Last updated: 2006/12/05 14:12:25
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -249,7 +249,7 @@ in a week."
          (cn-day   (cadddr cn-date)))
     (format "%s%s年%s%s%s(%s)"
             (calendar-chinese-sexagesimal-name cn-year)
-            (cal-china-x-get-zodiac (caddr date))
+            (cal-china-x-get-zodiac)
             (if (integerp cn-month) "" "(润)")
             (aref cal-china-x-month-name (1-  (floor cn-month)))
             (aref cal-china-x-day-name (1- cn-day))
@@ -286,13 +286,12 @@ in a week."
 			(calendar-chinese-sexagesimal-name
 			 (+ y 57))))))))))
 
-(defun cal-china-x-get-zodiac (year)
-  "Get zodiac(Sheng Xiao) in YEAR."
-  ;; i remember zobiac by remembering year 1984(鼠, Mouse).
-  (while (< year 1984 )
-    (setq year (+ year 12)))
-  (aref cal-china-x-zodiac-name
-        (mod (mod year 1984) 12)))
+(defun cal-china-x-get-zodiac (&optional date)
+  "Get zodiac(Sheng Xiao) on DATE."
+  (let ((n (cadr (calendar-chinese-from-absolute
+                  (calendar-absolute-from-gregorian
+                   (or date (calendar-current-date)))))))
+    (aref cal-china-x-zodiac-name (% (1- n) 12))))
 
 
 ;;; Modifications to Standard Functions
