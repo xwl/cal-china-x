@@ -5,8 +5,8 @@
 
 ;; Author: Charles Wang <charleswang@peoplemail.com.cn>
 ;;         William Xu <william.xwl@gmail.com>
-;; Version: 0.3
-;; Last updated: 2006/12/07 13:17:08
+;; Version: 0.31
+;; Last updated: 2006/12/07 13:18:19
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
