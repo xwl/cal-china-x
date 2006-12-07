@@ -6,7 +6,7 @@
 ;; Author: Charles Wang <charleswang@peoplemail.com.cn>
 ;;         William Xu <william.xwl@gmail.com>
 ;; Version: 0.3
-;; Last updated: 2006/12/05 14:12:25
+;; Last updated: 2006/12/07 13:17:08
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -249,7 +249,7 @@ in a week."
          (cn-day   (cadddr cn-date)))
     (format "%s%s年%s%s%s(%s)"
             (calendar-chinese-sexagesimal-name cn-year)
-            (cal-china-x-get-zodiac)
+            (cal-china-x-get-zodiac date)
             (if (integerp cn-month) "" "(润)")
             (aref cal-china-x-month-name (1-  (floor cn-month)))
             (aref cal-china-x-day-name (1- cn-day))
