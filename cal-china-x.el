@@ -1,12 +1,10 @@
 ;;; cal-china-x.el --- Chinese calendar extras
 
-;; Copyright (C) 2004 Charles Wang
 ;; Copyright (C) 2006 William Xu
 
-;; Author: Charles Wang <charleswang@peoplemail.com.cn>
-;;         William Xu <william.xwl@gmail.com>
-;; Version: 0.31
-;; Last updated: 2006/12/07 13:18:19
+;; Author: William Xu <william.xwl@gmail.com>
+;; Version: 0.32
+;; Last updated: 2006/12/12 19:02:28
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -32,6 +30,11 @@
 ;; ~/.emacs:
 ;;
 ;;   (require 'cal-china-x)
+
+;;; History
+
+;; This is a derived work from `chinese-calendar.el' written by Charles
+;; Wang <charleswang@peoplemail.com.cn>.
 
 ;;; TODO:
 
