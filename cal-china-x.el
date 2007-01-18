@@ -3,8 +3,8 @@
 ;; Copyright (C) 2006 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 0.32
-;; Last updated: 2006/12/12 19:02:28
+;; Version: 0.33
+;; Last updated: 2007/01/18 20:31:13
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -164,7 +164,7 @@ string)).  Returns nil if it is not visible in the current calendar window."
 		     'mouse-face 'mode-line-highlight
 		     'keymap (make-mode-line-mouse-map 'mouse-2
 						       'mouse-scroll-calendar-left))
-	 "Calendar"
+	 "*Calendar*"
 	 (concat
 	  (propertize
 	   (substitute-command-keys
