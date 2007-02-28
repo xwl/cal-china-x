@@ -1,10 +1,10 @@
 ;;; cal-china-x.el --- Chinese calendar extras
 
-;; Copyright (C) 2006 William Xu
+;; Copyright (C) 2006, 2007 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 0.33
-;; Last updated: 2007/01/18 20:31:13
+;; Last updated: 2007/01/23 23:23:52
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -127,9 +127,8 @@ calendar."
 	     (calendar-date-string birthday-gregorian-full))))
 
 (defun holiday-chinese (cmonth cday string)
-  "Holiday on month, day (Chinese Lunar) called string.
-If month, day is visible, the value returned is the list (((month day year)
-string)).  Returns nil if it is not visible in the current calendar window."
+  "Like `holiday-fixed', but CMONTH and CDAY use chinese lunar
+calendar."
   (let* ((m displayed-month)
          (y displayed-year)
          (gdate (calendar-gregorian-from-absolute
@@ -280,14 +279,12 @@ in a week."
     (if (< m 5)
         (let ((chinese-new-year
                (calendar-gregorian-from-absolute
-                (car (cdr (assoc 1 (chinese-year y)))))))
+                (cadr (assoc 1 (chinese-year y))))))
           (if (calendar-date-is-visible-p chinese-new-year)
-	      (list
-	       (list
-		chinese-new-year
-		(format "%s年春节"
-			(calendar-chinese-sexagesimal-name
-			 (+ y 57))))))))))
+	      `((,chinese-new-year
+                 ,(format "%s年春节"
+                          (calendar-chinese-sexagesimal-name
+                           (+ y 57))))))))))
 
 (defun cal-china-x-get-zodiac (&optional date)
   "Get zodiac(Sheng Xiao) on DATE."
