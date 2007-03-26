@@ -3,8 +3,8 @@
 ;; Copyright (C) 2006, 2007 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 0.33
-;; Last updated: 2007/01/23 23:23:52
+;; Version: 0.4
+;; Last updated: 2007/03/26 16:53:42
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@
 ;;; TODO:
 
 ;; - Display week day(the first line of each month) in chinese properly
-;; - hemi-seasons stuffs, 24 in total
 ;; - possible bug in `holiday-chinese', since it doesn't know 2006.08.30
 ;;   is another Qi Xi festival
 ;; - Fix diary display bug. Now it shows "期日". We need to figure out a
@@ -60,12 +59,6 @@
 
 (defvar cal-china-x-days
   ["日" "一" "二" "三" "四" "五" "六"])
-
-;; (defvar solar-n-hemi-seasons
-;;   '("春分" "夏至" "秋分" "冬至"))
-
-;; (defvar solar-s-hemi-seasons
-;;   '("秋分" "夏至" "春分" "冬至"))
 
 (defvar cal-china-x-month-name
   ["正月" "二月" "三月" "四月" "五月" "六月" "七月" "八月" "九月" "十月"
@@ -103,6 +96,15 @@
 (defvar cal-china-x-zodiac-name
   ["鼠" "牛" "虎" "兔" "龙" "蛇" "马" "羊" "猴" "鸡" "狗" "猪"]
   "The zodiac(Sheng Xiao) when you were born.")
+
+;; FIXME: Jie Qi name in English?
+(defvar cal-china-x-qijie-name
+  ["小寒" "大寒" "立春" "雨水" "惊蛰" "春分"
+   "清明" "谷雨" "立夏" "小满" "芒种" "夏至"
+   "小暑" "大暑" "立秋" "处暑" "白露" "秋分"
+   "寒露" "霜降" "立冬" "小雪" "大雪" "冬至"]
+  "24 qijie name.
+\"小寒\" is the first Qiqie in a new year. e.g., 2007-01-06.")
 
 
 ;;; High Level Functions
@@ -142,16 +144,7 @@ calendar."
 
 (defun cal-china-x-setup ()
   (setq calendar-date-display-form
-	'(
-          (cal-china-x-calendar-display-form date)
-;           (mapcar 'string-to-number (list month day year)))
-
-;;           (format "%04s年%02s月%02s日 %s"
-
-;;                   (cal-china-x-day-name (list (string-to-number month)
-;;                                               (string-to-number day)
-;;                                               (string-to-number year))))
-))
+	'((cal-china-x-calendar-display-form date)))
 
   (setq diary-date-forms chinese-date-diary-pattern)
 
@@ -249,13 +242,14 @@ in a week."
          (cn-year  (cadr   cn-date))
          (cn-month (caddr  cn-date))
          (cn-day   (cadddr cn-date)))
-    (format "%s%s年%s%s%s(%s)"
+    (format "%s%s年%s%s%s(%s)%s"
             (calendar-chinese-sexagesimal-name cn-year)
             (cal-china-x-get-zodiac date)
             (if (integerp cn-month) "" "(润)")
             (aref cal-china-x-month-name (1-  (floor cn-month)))
             (aref cal-china-x-day-name (1- cn-day))
-            (cal-china-x-get-horoscope (car date) (cadr date)))))
+            (cal-china-x-get-horoscope (car date) (cadr date))
+            (cal-china-x-get-qijie date))))
 
 (defun cal-china-x-get-horoscope (month day)
   "Return horoscope on MONTH(1-12) DAY(1-31)."
@@ -292,6 +286,56 @@ in a week."
                   (calendar-absolute-from-gregorian
                    (or date (calendar-current-date)))))))
     (aref cal-china-x-zodiac-name (% (1- n) 12))))
+
+;; an alist of date and qijie name. This will be updated automatically
+;; when necessary(e.g., when year exceeds its range).
+(defvar cal-china-x-qijie-alist nil)
+
+(defun cal-china-x-get-qijie (&optional date)
+  (unless date
+    (setq date (calendar-current-date)))
+  (let ((year (extract-calendar-year date))
+        (qijie-year (and cal-china-x-qijie-alist
+                         (extract-calendar-year
+                          (caar cal-china-x-qijie-alist)))))
+    (when (or (null qijie-year) (> year qijie-year))
+      (setq cal-china-x-qijie-alist
+            (cal-china-x-qijie-alist-new year))))
+  (or (cdr (assoc date cal-china-x-qijie-alist))
+      ""))
+
+(defun cal-china-x-qijie-alist-new (year)
+  "Return a qijie alist for YEAR."
+  (loop for i from 0 upto 23
+
+        for qj = (cal-china-x-next-qijie `(1 1 ,year))
+        then (setq qj (cal-china-x-next-qijie qj))
+
+        with qijie-alist = '()
+
+        collect (cons qj (aref cal-china-x-qijie-name i))
+        into qijie-alist
+
+        finally return qijie-alist))
+
+(defun cal-china-x-gregorian-from-astro (a)
+  (calendar-gregorian-from-absolute
+   (floor (calendar-absolute-from-astro a))))
+
+(defun cal-china-x-astro-from-gregorian (g)
+  (calendar-astro-from-absolute
+   (calendar-absolute-from-gregorian g)))
+
+(defun cal-china-x-next-qijie (date)
+  "Return next qijie's data after DATE.
+Each qijie is separated by 15 longtitude degrees or so, plus an
+extra day appended."
+  (cal-china-x-gregorian-from-astro
+    (solar-date-next-longitude
+     (cal-china-x-astro-from-gregorian
+      (calendar-gregorian-from-absolute
+       (1+ (calendar-absolute-from-gregorian date))))
+     15)))
 
 
 ;;; Modifications to Standard Functions
