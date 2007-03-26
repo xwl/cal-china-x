@@ -4,7 +4,7 @@
 
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 0.4
-;; Last updated: 2007/03/26 16:53:42
+;; Last updated: 2007/03/26 16:55:58
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -51,20 +51,20 @@
 
 ;;; Variables
 
-(defvar cal-china-x-celestial-stem
+(defconst cal-china-x-celestial-stem
   ["甲" "乙" "丙" "丁" "戊" "已" "庚" "辛" "壬" "癸"])
 
-(defvar cal-china-x-terrestrial-branch
+(defconst cal-china-x-terrestrial-branch
   ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
 
-(defvar cal-china-x-days
+(defconst cal-china-x-days
   ["日" "一" "二" "三" "四" "五" "六"])
 
-(defvar cal-china-x-month-name
+(defconst cal-china-x-month-name
   ["正月" "二月" "三月" "四月" "五月" "六月" "七月" "八月" "九月" "十月"
    "十一月" "腊月"])
 
-(defvar cal-china-x-day-name
+(defconst cal-china-x-day-name
   ["初一" "初二" "初三" "初四" "初五" "初六" "初七" "初八" "初九" "初十"
    "十一" "十二" "十三" "十四" "十五" "十六" "十七" "十八" "十九"  "廿"
    "廿一" "廿二" "廿三" "廿四" "廿五" "廿六" "廿七" "廿八" "廿九" "三十"
@@ -79,7 +79,7 @@
     (day " *" monthname " *" year "[^0-9]")
     (dayname "\\W")))
 
-(defvar cal-china-x-horoscope-name
+(defconst cal-china-x-horoscope-name
   '(((3  21) (4  19) "白羊")
     ((4  20) (5  20) "金牛")
     ((5  21) (6  21) "双子")
@@ -93,12 +93,12 @@
     ((1  20) (2  18) "水瓶")
     ((2  19) (3  20) "双鱼")))
 
-(defvar cal-china-x-zodiac-name
+(defconst cal-china-x-zodiac-name
   ["鼠" "牛" "虎" "兔" "龙" "蛇" "马" "羊" "猴" "鸡" "狗" "猪"]
   "The zodiac(Sheng Xiao) when you were born.")
 
 ;; FIXME: Jie Qi name in English?
-(defvar cal-china-x-qijie-name
+(defconst cal-china-x-qijie-name
   ["小寒" "大寒" "立春" "雨水" "惊蛰" "春分"
    "清明" "谷雨" "立夏" "小满" "芒种" "夏至"
    "小暑" "大暑" "立秋" "处暑" "白露" "秋分"
