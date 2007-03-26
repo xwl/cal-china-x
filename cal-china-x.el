@@ -3,8 +3,8 @@
 ;; Copyright (C) 2006, 2007 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 0.4
-;; Last updated: 2007/03/26 16:55:58
+;; Version: 0.5
+;; Last updated: 2007/03/26 18:37:17
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -98,13 +98,18 @@
   "The zodiac(Sheng Xiao) when you were born.")
 
 ;; FIXME: Jie Qi name in English?
+;; for ref, http://www.geocities.com/calshing/chinesecalendar.htm
 (defconst cal-china-x-qijie-name
   ["小寒" "大寒" "立春" "雨水" "惊蛰" "春分"
    "清明" "谷雨" "立夏" "小满" "芒种" "夏至"
    "小暑" "大暑" "立秋" "处暑" "白露" "秋分"
    "寒露" "霜降" "立冬" "小雪" "大雪" "冬至"]
   "24 qijie name.
-\"小寒\" is the first Qiqie in a new year. e.g., 2007-01-06.")
+\"小寒\" is the first Qiqie in a new year. e.g., 2007-01-06.
+There is a short poem for remembering,
+
+    春雨惊春清谷天，夏满芒夏暑相连，
+    秋处露秋寒霜降，冬雪雪冬小大寒。")
 
 
 ;;; High Level Functions
@@ -131,16 +136,31 @@ calendar."
 (defun holiday-chinese (cmonth cday string)
   "Like `holiday-fixed', but CMONTH and CDAY use chinese lunar
 calendar."
-  (let* ((m displayed-month)
-         (y displayed-year)
-         (gdate (calendar-gregorian-from-absolute
-                 (+ (cadr (assoc cmonth (chinese-year y))) (1- cday))))
-         (gm (car gdate))
-         (gd (cadr gdate))
-         (gy (caddr gdate)))
-    (increment-calendar-month m y (- 11 gm))
-    (when (> m 9)
-      `(((,gm ,gd ,gy) ,string)))))
+  (let* ((y displayed-year)
+         (cn-years (chinese-year y))
+         (ret '()))
+    (let ((date (calendar-gregorian-from-absolute
+                 (+ (cadr (assoc cmonth cn-years)) (1- cday)))))
+      (setq ret (append ret
+                        (holiday-fixed (car date)
+                                       (cadr date)
+                                       string))))
+    ;; 闰月, e.g., 2006-08-30
+    (when (> (length cn-years) 12)
+      (let ((run (car (remove-if 'null
+                                 (mapcar
+                                  (lambda (el)
+                                    (unless (integerp (car el))
+                                      el))
+                                  (chinese-year y))))))
+        (when (= cmonth (floor (car run)))
+          (let ((date (calendar-gregorian-from-absolute
+                       (+ (cadr run) (1- cday)))))
+            (setq ret (append ret
+                              (holiday-fixed (car date)
+                                             (cadr date)
+                                             string)))))))
+    ret))
 
 (defun cal-china-x-setup ()
   (setq calendar-date-display-form
@@ -245,8 +265,8 @@ in a week."
     (format "%s%s年%s%s%s(%s)%s"
             (calendar-chinese-sexagesimal-name cn-year)
             (cal-china-x-get-zodiac date)
-            (if (integerp cn-month) "" "(润)")
             (aref cal-china-x-month-name (1-  (floor cn-month)))
+            (if (integerp cn-month) "" "(闰月)")
             (aref cal-china-x-day-name (1- cn-day))
             (cal-china-x-get-horoscope (car date) (cadr date))
             (cal-china-x-get-qijie date))))
@@ -298,7 +318,7 @@ in a week."
         (qijie-year (and cal-china-x-qijie-alist
                          (extract-calendar-year
                           (caar cal-china-x-qijie-alist)))))
-    (when (or (null qijie-year) (> year qijie-year))
+    (when (or (null qijie-year) (not (= year qijie-year)))
       (setq cal-china-x-qijie-alist
             (cal-china-x-qijie-alist-new year))))
   (or (cdr (assoc date cal-china-x-qijie-alist))
