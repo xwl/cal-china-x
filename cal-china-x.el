@@ -4,7 +4,7 @@
 
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 0.5
-;; Last updated: 2007/03/26 18:37:17
+;; Last updated: 2007/03/26 18:38:10
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -39,10 +39,6 @@
 ;;; TODO:
 
 ;; - Display week day(the first line of each month) in chinese properly
-;; - possible bug in `holiday-chinese', since it doesn't know 2006.08.30
-;;   is another Qi Xi festival
-;; - Fix diary display bug. Now it shows "期日". We need to figure out a
-;;   way to let Emacs calendar understand chinese `dayname'.
 
 ;;; Code:
 
