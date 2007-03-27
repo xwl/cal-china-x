@@ -4,7 +4,7 @@
 
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 0.5
-;; Last updated: 2007/03/26 18:38:10
+;; Last updated: 2007/03/27 20:13:29
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@
 ;;; TODO:
 
 ;; - Display week day(the first line of each month) in chinese properly
+;; - clean naming styles? lunar or chinese?
 
 ;;; Code:
 
@@ -129,14 +130,12 @@ calendar."
     (message "Your next birthday in gregorian is on %s"
 	     (calendar-date-string birthday-gregorian-full))))
 
-(defun holiday-chinese (cmonth cday string)
-  "Like `holiday-fixed', but CMONTH and CDAY use chinese lunar
-calendar."
-  (let* ((y displayed-year)
-         (cn-years (chinese-year y))
-         (ret '()))
+(defun holiday-lunar (lunar-month lunar-day string)
+  "Like `holiday-fixed', but with LUNAR-MONTH and LUNAR-DAY."
+  (let ((cn-years (chinese-year displayed-year))
+        (ret '()))
     (let ((date (calendar-gregorian-from-absolute
-                 (+ (cadr (assoc cmonth cn-years)) (1- cday)))))
+                 (+ (cadr (assoc lunar-month cn-years)) (1- lunar-day)))))
       (setq ret (append ret
                         (holiday-fixed (car date)
                                        (cadr date)
@@ -148,15 +147,37 @@ calendar."
                                   (lambda (el)
                                     (unless (integerp (car el))
                                       el))
-                                  (chinese-year y))))))
-        (when (= cmonth (floor (car run)))
+                                  cn-years)))))
+        (when (= lunar-month (floor (car run)))
           (let ((date (calendar-gregorian-from-absolute
-                       (+ (cadr run) (1- cday)))))
+                       (+ (cadr run) (1- lunar-day)))))
             (setq ret (append ret
                               (holiday-fixed (car date)
                                              (cadr date)
                                              string)))))))
     ret))
+
+(defun cal-china-x-calendar-display-form (date)
+  (format "%04d年%02d月%02d日 %s"
+	  (extract-calendar-year date)
+	  (extract-calendar-month date)
+	  (extract-calendar-day date)
+	  (cal-china-x-day-name date)))
+
+(defun cal-china-x-chinese-date-string (date)
+  (let* ((cn-date (calendar-chinese-from-absolute
+                   (calendar-absolute-from-gregorian date)))
+         (cn-year  (cadr   cn-date))
+         (cn-month (caddr  cn-date))
+         (cn-day   (cadddr cn-date)))
+    (format "%s%s年%s%s%s(%s)%s"
+            (calendar-chinese-sexagesimal-name cn-year)
+            (cal-china-x-get-zodiac date)
+            (aref cal-china-x-month-name (1-  (floor cn-month)))
+            (if (integerp cn-month) "" "(闰月)")
+            (aref cal-china-x-day-name (1- cn-day))
+            (cal-china-x-get-horoscope (car date) (cadr date))
+            (cal-china-x-get-qijie date))))
 
 (defun cal-china-x-setup ()
   (setq calendar-date-display-form
@@ -223,11 +244,11 @@ calendar."
 	  (holiday-fixed 10 1  "国庆节")
 	  (holiday-fixed 12 25 "圣诞节")
 
-	  (holiday-chinese 1 15 "元宵节")
-	  (holiday-chinese 5 5  "端午节")
-          (holiday-chinese 7 7  "七夕节")
-	  (holiday-chinese 9 9  "重阳节")
-	  (holiday-chinese 8 15 "中秋节")))
+	  (holiday-lunar 1 15 "元宵节")
+	  (holiday-lunar 5 5  "端午节")
+          (holiday-lunar 7 7  "七夕节")
+	  (holiday-lunar 9 9  "重阳节")
+	  (holiday-lunar 8 15 "中秋节")))
 
   (setq calendar-holidays
 	(append general-holidays local-holidays)))
@@ -237,35 +258,12 @@ calendar."
 
 (defun cal-china-x-day-name (date)
   "Chinese day name in a week, like `星期一'."
-  (concat "星期"
-	  (aref cal-china-x-days (calendar-day-of-week date))))
+  (concat "星期" (aref cal-china-x-days (calendar-day-of-week date))))
 
 (defun cal-china-x-day-short-name (num)
   "Short chinese day name in a week, like `一'. NUM is from 0..6
 in a week."
   (aref cal-china-x-days num))
-
-(defun cal-china-x-calendar-display-form (date)
-  (format "%04d年%02d月%02d日 %s"
-	  (extract-calendar-year date)
-	  (extract-calendar-month date)
-	  (extract-calendar-day date)
-	  (cal-china-x-day-name date)))
-
-(defun cal-china-x-chinese-date-string (date)
-  (let* ((cn-date (calendar-chinese-from-absolute
-                   (calendar-absolute-from-gregorian date)))
-         (cn-year  (cadr   cn-date))
-         (cn-month (caddr  cn-date))
-         (cn-day   (cadddr cn-date)))
-    (format "%s%s年%s%s%s(%s)%s"
-            (calendar-chinese-sexagesimal-name cn-year)
-            (cal-china-x-get-zodiac date)
-            (aref cal-china-x-month-name (1-  (floor cn-month)))
-            (if (integerp cn-month) "" "(闰月)")
-            (aref cal-china-x-day-name (1- cn-day))
-            (cal-china-x-get-horoscope (car date) (cadr date))
-            (cal-china-x-get-qijie date))))
 
 (defun cal-china-x-get-horoscope (month day)
   "Return horoscope on MONTH(1-12) DAY(1-31)."
