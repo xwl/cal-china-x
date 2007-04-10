@@ -5,7 +5,7 @@
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 0.6
 ;; Url: http://williamxu.net9.org/emacs.html
-;; Last updated: 2007/04/10 17:42:02
+;; Last updated: 2007/04/10 17:51:28
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -40,7 +40,6 @@
 ;;; TODO:
 
 ;; - Display week day(the first line of each month) in chinese properly
-;; - clean naming styles? lunar or chinese?
 
 ;;; Code:
 
