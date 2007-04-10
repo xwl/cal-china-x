@@ -3,8 +3,9 @@
 ;; Copyright (C) 2006, 2007 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 0.5
-;; Last updated: 2007/03/27 20:13:29
+;; Version: 0.6
+;; Url: http://williamxu.net9.org/ref/cal-china-x.el
+;; Last updated: 2007/04/10 17:36:33
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -96,12 +97,12 @@
 
 ;; FIXME: Jie Qi name in English?
 ;; for ref, http://www.geocities.com/calshing/chinesecalendar.htm
-(defconst cal-china-x-qijie-name
+(defconst cal-china-x-jieqi-name
   ["小寒" "大寒" "立春" "雨水" "惊蛰" "春分"
    "清明" "谷雨" "立夏" "小满" "芒种" "夏至"
    "小暑" "大暑" "立秋" "处暑" "白露" "秋分"
    "寒露" "霜降" "立冬" "小雪" "大雪" "冬至"]
-  "24 qijie name.
+  "24 jieqi name.
 \"小寒\" is the first Qiqie in a new year. e.g., 2007-01-06.
 There is a short poem for remembering,
 
@@ -158,11 +159,13 @@ calendar."
     ret))
 
 (defun cal-china-x-calendar-display-form (date)
-  (format "%04d年%02d月%02d日 %s"
-	  (extract-calendar-year date)
-	  (extract-calendar-month date)
-	  (extract-calendar-day date)
-	  (cal-china-x-day-name date)))
+  (if (equal date '(0 0 0))
+      ""
+    (format "%04d年%02d月%02d日 %s"
+            (extract-calendar-year date)
+            (extract-calendar-month date)
+            (extract-calendar-day date)
+            (cal-china-x-day-name date))))
 
 (defun cal-china-x-chinese-date-string (date)
   (let* ((cn-date (calendar-chinese-from-absolute
@@ -177,11 +180,13 @@ calendar."
             (if (integerp cn-month) "" "(闰月)")
             (aref cal-china-x-day-name (1- cn-day))
             (cal-china-x-get-horoscope (car date) (cadr date))
-            (cal-china-x-get-qijie date))))
+            (cal-china-x-get-jieqi date))))
 
 (defun cal-china-x-setup ()
   (setq calendar-date-display-form
-	'((cal-china-x-calendar-display-form date)))
+	'((cal-china-x-calendar-display-form
+           (mapcar (lambda (el) (string-to-number el))
+                   (list month day year)))))
 
   (setq diary-date-forms chinese-date-diary-pattern)
 
@@ -301,36 +306,36 @@ in a week."
                    (or date (calendar-current-date)))))))
     (aref cal-china-x-zodiac-name (% (1- n) 12))))
 
-;; an alist of date and qijie name. This will be updated automatically
+;; an alist of date and jieqi name. This will be updated automatically
 ;; when necessary(e.g., when year exceeds its range).
-(defvar cal-china-x-qijie-alist nil)
+(defvar cal-china-x-jieqi-alist nil)
 
-(defun cal-china-x-get-qijie (&optional date)
+(defun cal-china-x-get-jieqi (&optional date)
   (unless date
     (setq date (calendar-current-date)))
   (let ((year (extract-calendar-year date))
-        (qijie-year (and cal-china-x-qijie-alist
+        (jieqi-year (and cal-china-x-jieqi-alist
                          (extract-calendar-year
-                          (caar cal-china-x-qijie-alist)))))
-    (when (or (null qijie-year) (not (= year qijie-year)))
-      (setq cal-china-x-qijie-alist
-            (cal-china-x-qijie-alist-new year))))
-  (or (cdr (assoc date cal-china-x-qijie-alist))
+                          (caar cal-china-x-jieqi-alist)))))
+    (when (or (null jieqi-year) (not (= year jieqi-year)))
+      (setq cal-china-x-jieqi-alist
+            (cal-china-x-jieqi-alist-new year))))
+  (or (cdr (assoc date cal-china-x-jieqi-alist))
       ""))
 
-(defun cal-china-x-qijie-alist-new (year)
-  "Return a qijie alist for YEAR."
+(defun cal-china-x-jieqi-alist-new (year)
+  "Return a jieqi alist for YEAR."
   (loop for i from 0 upto 23
 
-        for qj = (cal-china-x-next-qijie `(1 1 ,year))
-        then (setq qj (cal-china-x-next-qijie qj))
+        for qj = (cal-china-x-next-jieqi `(1 1 ,year))
+        then (setq qj (cal-china-x-next-jieqi qj))
 
-        with qijie-alist = '()
+        with jieqi-alist = '()
 
-        collect (cons qj (aref cal-china-x-qijie-name i))
-        into qijie-alist
+        collect (cons qj (aref cal-china-x-jieqi-name i))
+        into jieqi-alist
 
-        finally return qijie-alist))
+        finally return jieqi-alist))
 
 (defun cal-china-x-gregorian-from-astro (a)
   (calendar-gregorian-from-absolute
@@ -340,9 +345,9 @@ in a week."
   (calendar-astro-from-absolute
    (calendar-absolute-from-gregorian g)))
 
-(defun cal-china-x-next-qijie (date)
-  "Return next qijie's data after DATE.
-Each qijie is separated by 15 longtitude degrees or so, plus an
+(defun cal-china-x-next-jieqi (date)
+  "Return next jieqi's data after DATE.
+Each jieqi is separated by 15 longtitude degrees or so, plus an
 extra day appended."
   (cal-china-x-gregorian-from-astro
     (solar-date-next-longitude
