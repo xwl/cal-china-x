@@ -4,8 +4,8 @@
 
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 0.6
-;; Url: http://williamxu.net9.org/ref/cal-china-x.el
-;; Last updated: 2007/04/10 17:36:33
+;; Url: http://williamxu.net9.org/emacs.html
+;; Last updated: 2007/04/10 17:42:02
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
