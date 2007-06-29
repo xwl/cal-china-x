@@ -5,7 +5,6 @@
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 0.6
 ;; Url: http://williamxu.net9.org/emacs.html
-;; Last updated: 2007/04/10 17:51:28
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -25,12 +24,7 @@
 
 ;; This package adds more chinese calendar supports. Currently, it can
 ;; show lunar calendar, horoscope info, zodiac info, etc. Feedbacks are
-;; warmly welcome.
-
-;; Put this file into your load-path and the following into your
-;; ~/.emacs:
-;;
-;;   (require 'cal-china-x)
+;; warmly welcome. To use, add the following in your .emacs:
 
 ;;; History
 
@@ -111,6 +105,7 @@ There is a short poem for remembering,
 
 ;;; High Level Functions
 
+;;;###autoload
 (defun cal-china-x-birthday-from-chinese (lunar-month lunar-day)
   "Return birthday date this year in Gregorian form.
 
@@ -130,6 +125,7 @@ calendar."
     (message "Your next birthday in gregorian is on %s"
 	     (calendar-date-string birthday-gregorian-full))))
 
+;;;###autoload
 (defun holiday-lunar (lunar-month lunar-day string)
   "Like `holiday-fixed', but with LUNAR-MONTH and LUNAR-DAY."
   (let ((cn-years (chinese-year displayed-year))
@@ -421,7 +417,7 @@ characters on the line."
            (calendar-insert-indented "" indent)))));; Go to proper spot
 
 
-;; set up
+;; setup
 (cal-china-x-setup)
 
 (provide 'cal-china-x)
