@@ -3,7 +3,7 @@
 ;; Copyright (C) 2006, 2007 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 0.6
+;; Version: 0.7
 ;; Url: http://williamxu.net9.org/emacs.html
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -184,6 +184,12 @@ calendar."
                    (list month day year)))))
 
   (setq diary-date-forms chinese-date-diary-pattern)
+
+  ;; chinese month and year
+  (setq calendar-font-lock-keywords
+        (append calendar-font-lock-keywords
+                '(("[0-9]+年\\ *[0-9]+月"
+                   . font-lock-function-name-face))))
 
   (setq calendar-mode-line-format
 	(list
