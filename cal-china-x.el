@@ -192,46 +192,46 @@ calendar."
                    . font-lock-function-name-face))))
 
   (setq calendar-mode-line-format
-	(list
-	 (propertize (substitute-command-keys
-		      "\\<calendar-mode-map>\\[scroll-calendar-left]")
-		     'help-echo "mouse-2: scroll left"
-		     'mouse-face 'mode-line-highlight
-		     'keymap (make-mode-line-mouse-map 'mouse-2
-						       'mouse-scroll-calendar-left))
-	 "*Calendar*"
-	 (concat
-	  (propertize
-	   (substitute-command-keys
-	    "\\<calendar-mode-map>\\[calendar-goto-info-node] info")
-	   'help-echo "mouse-2: read Info on Calendar"
-	   'mouse-face 'mode-line-highlight
-	   'keymap (make-mode-line-mouse-map 'mouse-2 'calendar-goto-info-node))
-	  "/"
-	  (propertize
-	   (substitute-command-keys
-	    "\\<calendar-mode-map>\\[calendar-other-month] other")
-	   'help-echo "mouse-2: choose another month"
-	   'mouse-face 'mode-line-highlight
-	   'keymap (make-mode-line-mouse-map
-		    'mouse-2 'mouse-calendar-other-month))
-	  "/"
-	  (propertize
-	   (substitute-command-keys
-	    "\\<calendar-mode-map>\\[calendar-goto-today] today")
-	   'help-echo "mouse-2: go to today's date"
-	   'mouse-face 'mode-line-highlight
-	   'keymap (make-mode-line-mouse-map 'mouse-2 #'calendar-goto-today)))
-	 '(calendar-date-string date t)
-	 '(cal-china-x-chinese-date-string date)
-	 (propertize (substitute-command-keys
-		      "\\<calendar-mode-map>\\[scroll-calendar-right]")
-		     'help-echo "mouse-2: scroll right"
-		     'mouse-face 'mode-line-highlight
-		     'keymap (make-mode-line-mouse-map
-			      'mouse-2 'mouse-scroll-calendar-right))
-	 ;; FIXME: why should i add this in order to display right '>' ?
-	 ""))
+        (list
+         (propertize "<"
+                     'help-echo "mouse-1: previous month"
+                     'mouse-face 'mode-line-highlight
+                     'keymap (make-mode-line-mouse-map 'mouse-1
+                                                       'calendar-scroll-right))
+         "Calendar"
+         (concat
+          (propertize
+           (substitute-command-keys
+            "\\<calendar-mode-map>\\[calendar-goto-info-node] info")
+           'help-echo "mouse-1: read Info on Calendar"
+           'mouse-face 'mode-line-highlight
+           'keymap (make-mode-line-mouse-map 'mouse-1 'calendar-goto-info-node))
+          " / "
+          (propertize
+           (substitute-command-keys
+            " \\<calendar-mode-map>\\[calendar-other-month] other")
+           'help-echo "mouse-1: choose another month"
+           'mouse-face 'mode-line-highlight
+           'keymap (make-mode-line-mouse-map
+                    'mouse-1 'mouse-calendar-other-month))
+          " / "
+          (propertize
+           (substitute-command-keys
+            "\\<calendar-mode-map>\\[calendar-goto-today] today")
+           'help-echo "mouse-1: go to today's date"
+           'mouse-face 'mode-line-highlight
+           'keymap (make-mode-line-mouse-map 'mouse-1 #'calendar-goto-today)))
+         '(calendar-date-string date t)
+         '(cal-china-x-chinese-date-string date)
+         ;; FIXME: This right `>' can not be displayed correctly. Also,
+         ;; it looks like if i don't append an additional "" at end,
+         ;; even more right partial info will disappear.
+         (propertize ">"
+                     'help-echo "mouse-1: next month"
+                     'mouse-face 'mode-line-highlight
+                     'keymap (make-mode-line-mouse-map
+                              'mouse-1 'calendar-scroll-left))
+         ""))
 
   (add-hook 'calendar-move-hook 'update-calendar-mode-line)
 
