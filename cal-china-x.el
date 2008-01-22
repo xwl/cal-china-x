@@ -1,10 +1,11 @@
 ;;; cal-china-x.el --- Chinese calendar extras
 
-;; Copyright (C) 2006, 2007 William Xu
+;; Copyright (C) 2006, 2007, 2008 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 0.7
+;; Version: 0.8
 ;; Url: http://williamxu.net9.org/emacs.html
+;; Last updated: 2008/01/22
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -88,22 +89,81 @@
   ["鼠" "牛" "虎" "兔" "龙" "蛇" "马" "羊" "猴" "鸡" "狗" "猪"]
   "The zodiac(Sheng Xiao) when you were born.")
 
-;; FIXME: Jie Qi name in English?
 ;; for ref, http://www.geocities.com/calshing/chinesecalendar.htm
-(defconst cal-china-x-jieqi-name
+(defconst cal-china-x-solar-term-name
   ["小寒" "大寒" "立春" "雨水" "惊蛰" "春分"
    "清明" "谷雨" "立夏" "小满" "芒种" "夏至"
    "小暑" "大暑" "立秋" "处暑" "白露" "秋分"
    "寒露" "霜降" "立冬" "小雪" "大雪" "冬至"]
-  "24 jieqi name.
+  "24 solar terms(节气, in chinese).
 \"小寒\" is the first Qiqie in a new year. e.g., 2007-01-06.
 There is a short poem for remembering,
 
     春雨惊春清谷天，夏满芒夏暑相连，
     秋处露秋寒霜降，冬雪雪冬小大寒。")
 
+(defvar cal-china-x-japanese-holidays
+  '((holiday-fixed 1 1 "元旦")
+    (holiday-fixed 1 2 "公务员法定休息日")
+    (holiday-fixed 1 3 "公务员法定休息日")
+    (holiday-fixed 1 4 "公务员法定休息日")
+    (holiday-float 1 1 1 "成人の日")
+    (holiday-fixed 2 11 "建国記念の日")
+    (holiday-solar-term "春分" "春分の日")
+    (holiday-fixed 4 29 "みどりの日")
+    (holiday-fixed 5 3 "憲法記念日")
+    (holiday-fixed 5 4 "国民の休日")
+    (holiday-fixed 5 5 "こどもの日")
+    (holiday-fixed 7 20 "海の日")
+    (holiday-fixed 9 15 "敬老の日")
+    (holiday-solar-term "秋分" "秋分の日")
+    (holiday-float 10 1 0 "体育の日")
+    (holiday-fixed 11 3 "文化の日")
+    (holiday-fixed 11 23 "勤労感謝の日")
+    (holiday-fixed 12 23 "天皇誕生日")
+    (holiday-fixed 12 28 "公务员法定休息日")
+    (holiday-fixed 12 29 "公务员法定休息日")
+    (holiday-fixed 12 30 "公务员法定休息日")
+    (holiday-fixed 12 31 "公务员法定休息日"))
+  "Pre-defined japanese public holidays.
+You can add this to your `calendar-holidays'.")
+
 
-;;; High Level Functions
+;;; Interfaces
+
+(defgroup cal-china-x nil
+  "China calendar extentions and more."
+  :group 'calendar)
+
+(defcustom cal-china-x-important-holidays '()
+  "Most important holidays, colored with `cal-china-x-important-holidays-face'."
+  :type 'symbol
+  :group 'cal-china-x)
+
+(defcustom cal-china-x-misc-holidays '()
+  "Most misc holidays, colored with `cal-china-x-misc-holidays-face'."
+  :type 'symbol
+  :group 'cal-china-x)
+
+(defface cal-china-x-important-holiday-face
+  '((((class color) (background light))
+     :background "red")
+    (((class color) (background dark))
+     :background "red")
+    (t
+     :inverse-video t))
+  "Face for indicating `cal-china-x-important-holidays'."
+  :group 'cal-china-x)
+
+(defface cal-china-x-misc-holiday-face
+  '((((class color) (background light))
+     :background "green")
+    (((class color) (background dark))
+     :background "green")
+    (t
+     :inverse-video t))
+  "Face for indicating `cal-china-x-misc-holidays'."
+  :group 'cal-china-x)
 
 ;;;###autoload
 (defun cal-china-x-birthday-from-chinese (lunar-month lunar-day)
@@ -153,6 +213,19 @@ calendar."
                                              string)))))))
     ret))
 
+;;;###autoload
+(defun holiday-solar-term (solar-term str)
+  "A holiday(STR) on SOLAR-TERM day.
+See `cal-china-x-solar-term-name' for a list of solar term names ."
+  (cal-china-x-sync-solar-term displayed-year)
+  (let ((l cal-china-x-solar-term-alist)
+        date)
+    (dolist (i l)
+      (when (string= (cdr i) solar-term)
+        (setq l '()
+              date (car i))))
+    (holiday-fixed (car date) (cadr date) str)))
+
 (defun cal-china-x-calendar-display-form (date)
   (if (equal date '(0 0 0))
       ""
@@ -175,7 +248,7 @@ calendar."
             (if (integerp cn-month) "" "(闰月)")
             (aref cal-china-x-day-name (1- cn-day))
             (cal-china-x-get-horoscope (car date) (cadr date))
-            (cal-china-x-get-jieqi date))))
+            (cal-china-x-get-solar-term date))))
 
 (defun cal-china-x-setup ()
   (setq calendar-date-display-form
@@ -193,12 +266,19 @@ calendar."
 
   (setq calendar-mode-line-format
         (list
-         (propertize "<"
-                     'help-echo "mouse-1: previous month"
-                     'mouse-face 'mode-line-highlight
-                     'keymap (make-mode-line-mouse-map 'mouse-1
-                                                       'calendar-scroll-right))
-         "Calendar"
+         (concat
+          (propertize "<"
+                      'help-echo "mouse-1: previous month"
+                      'mouse-face 'mode-line-highlight
+                      'keymap (make-mode-line-mouse-map 'mouse-1
+                                                        'calendar-scroll-right))
+          " " calendar-buffer)
+
+         ;; TODO, only do this after calendar has fully initialized!
+         '(cal-china-x-get-holiday date)
+         '(calendar-date-string date t)
+         '(cal-china-x-chinese-date-string date)
+
          (concat
           (propertize
            (substitute-command-keys
@@ -221,8 +301,7 @@ calendar."
            'help-echo "mouse-1: go to today's date"
            'mouse-face 'mode-line-highlight
            'keymap (make-mode-line-mouse-map 'mouse-1 #'calendar-goto-today)))
-         '(calendar-date-string date t)
-         '(cal-china-x-chinese-date-string date)
+
          ;; FIXME: This right `>' can not be displayed correctly. Also,
          ;; it looks like if i don't append an additional "" at end,
          ;; even more right partial info will disappear.
@@ -259,8 +338,23 @@ calendar."
   (setq calendar-holidays
 	(append general-holidays local-holidays)))
 
+(defadvice calendar-mark-holidays (around mark-different-holidays activate)
+  "Mark extra `xwl-important-holidays'."
+  (let ((calendar-holiday-marker 'cal-china-x-important-holiday-face)
+        (calendar-holidays cal-china-x-important-holidays))
+    ad-do-it)
+  (let ((calendar-holiday-marker 'cal-china-x-misc-holiday-face)
+        (calendar-holidays cal-china-x-misc-holidays))
+    ad-do-it)
+  (let ((calendar-holidays
+         (remove-if (lambda (i)
+                      (or (member i cal-china-x-important-holidays)
+                          (member i cal-china-x-misc-holidays)))
+                    calendar-holidays)))
+    ad-do-it))
+
 
-;;; Low Level Functions
+;;; Implementations
 
 (defun cal-china-x-day-name (date)
   "Chinese day name in a week, like `星期一'."
@@ -307,36 +401,27 @@ in a week."
                    (or date (calendar-current-date)))))))
     (aref cal-china-x-zodiac-name (% (1- n) 12))))
 
-;; an alist of date and jieqi name. This will be updated automatically
-;; when necessary(e.g., when year exceeds its range).
-(defvar cal-china-x-jieqi-alist nil)
-
-(defun cal-china-x-get-jieqi (&optional date)
+(defun cal-china-x-get-solar-term (&optional date)
   (unless date
     (setq date (calendar-current-date)))
-  (let ((year (extract-calendar-year date))
-        (jieqi-year (and cal-china-x-jieqi-alist
-                         (extract-calendar-year
-                          (caar cal-china-x-jieqi-alist)))))
-    (when (or (null jieqi-year) (not (= year jieqi-year)))
-      (setq cal-china-x-jieqi-alist
-            (cal-china-x-jieqi-alist-new year))))
-  (or (cdr (assoc date cal-china-x-jieqi-alist))
-      ""))
+  (let ((year (extract-calendar-year date)))
+    (cal-china-x-sync-solar-term year)
+    (or (cdr (assoc date cal-china-x-solar-term-alist))
+        "")))
 
-(defun cal-china-x-jieqi-alist-new (year)
-  "Return a jieqi alist for YEAR."
+(defun cal-china-x-solar-term-alist-new (year)
+  "Return a solar-term alist for YEAR."
   (loop for i from 0 upto 23
 
-        for qj = (cal-china-x-next-jieqi `(1 1 ,year))
-        then (setq qj (cal-china-x-next-jieqi qj))
+        for date = (cal-china-x-next-solar-term `(1 1 ,year))
+        then (setq date (cal-china-x-next-solar-term date))
 
-        with jieqi-alist = '()
+        with solar-term-alist = '()
 
-        collect (cons qj (aref cal-china-x-jieqi-name i))
-        into jieqi-alist
+        collect (cons date (aref cal-china-x-solar-term-name i))
+        into solar-term-alist
 
-        finally return jieqi-alist))
+        finally return solar-term-alist))
 
 (defun cal-china-x-gregorian-from-astro (a)
   (calendar-gregorian-from-absolute
@@ -346,9 +431,9 @@ in a week."
   (calendar-astro-from-absolute
    (calendar-absolute-from-gregorian g)))
 
-(defun cal-china-x-next-jieqi (date)
-  "Return next jieqi's data after DATE.
-Each jieqi is separated by 15 longtitude degrees or so, plus an
+(defun cal-china-x-next-solar-term (date)
+  "Return next solar term's data after DATE.
+Each solar term is separated by 15 longtitude degrees or so, plus an
 extra day appended."
   (cal-china-x-gregorian-from-astro
     (solar-date-next-longitude
@@ -356,6 +441,30 @@ extra day appended."
       (calendar-gregorian-from-absolute
        (1+ (calendar-absolute-from-gregorian date))))
      15)))
+
+(defun cal-china-x-get-holiday (date)
+  (when (and (boundp 'displayed-month)
+             (boundp 'displayed-year))
+    (let ((holidays (calendar-holiday-list))
+          (str ""))
+      (dolist (i holidays)
+        (when (equal (car i) date)
+          (setq str (concat str " " (cadr i)))))
+      str)))
+
+;; cached solar terms in a year
+(defvar cal-china-x-solar-term-alist nil) ; e.g., '(((1 20 2008) "春分") ...)
+(defvar cal-china-x-solar-term-year nil)
+
+(defun cal-china-x-sync-solar-term (year)
+  "Sync `cal-china-x-solar-term-alist' and `cal-china-x-solar-term-year' to YEAR."
+  (unless (and cal-china-x-solar-term-year
+               (= cal-china-x-solar-term-year year))
+      (setq cal-china-x-solar-term-alist
+            (cal-china-x-solar-term-alist-new year))
+      (setq cal-china-x-solar-term-year
+            (extract-calendar-year
+             (caar cal-china-x-solar-term-alist)))))
 
 
 ;;; Modifications to Standard Functions
