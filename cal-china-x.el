@@ -5,7 +5,7 @@
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 0.8
 ;; Url: http://williamxu.net9.org/emacs.html
-;; Last updated: 2008/01/22
+;; Last updated: 2008/01/27
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,14 +23,22 @@
 
 ;;; Commentary:
 
-;; This package adds more chinese calendar supports. Currently, it can
-;; show lunar calendar, horoscope info, zodiac info, etc. Feedbacks are
-;; warmly welcome. To use, add the following in your .emacs:
+;; This package adds more chinese calendar supports and others,
+;; including:
+;;
+;;   - Chinese localizations
+;;   - Display holiday, lunar, horoscope, zodiac, solar term info on mode line
+;;   - Can define holidays using `holiday-lunar', `holiday-solar-term'
+;;   - Highlight holidays based on different priorities
+;;   - Add `cal-china-x-chinese-holidays', `cal-china-x-japanese-holidays'.
+;;
+;; To use, add the following in your .emacs:
+;;     (require 'cal-china-x)
 
 ;;; History
 
-;; This is a derived work from `chinese-calendar.el' written by Charles
-;; Wang <charleswang@peoplemail.com.cn>.
+;; This is an early derived work from `chinese-calendar.el' written by
+;; Charles Wang <charleswang@peoplemail.com.cn>.
 
 ;;; TODO:
 
@@ -96,7 +104,7 @@
    "小暑" "大暑" "立秋" "处暑" "白露" "秋分"
    "寒露" "霜降" "立冬" "小雪" "大雪" "冬至"]
   "24 solar terms(节气, in chinese).
-\"小寒\" is the first Qiqie in a new year. e.g., 2007-01-06.
+\"小寒\" is the first solar term in a new year. e.g., 2007-01-06.
 There is a short poem for remembering,
 
     春雨惊春清谷天，夏满芒夏暑相连，
@@ -128,6 +136,21 @@ There is a short poem for remembering,
   "Pre-defined japanese public holidays.
 You can add this to your `calendar-holidays'.")
 
+(defvar cal-china-x-chinese-holidays
+  '((holiday-fixed 1 1 "元旦")
+    (holiday-lunar 12 30 "春节" 0)
+    (holiday-lunar 1 1 "春节" 0)
+    (holiday-lunar 1 2 "春节" 0)
+    (holiday-solar-term "清明" "清明节")
+    (holiday-fixed 5 1 "劳动节")
+    (holiday-lunar 5 5 "端午节" 0)
+    (holiday-lunar 8 15 "中秋节" 0)
+    (holiday-fixed 10 1 "国庆节")
+    (holiday-fixed 10 2 "国庆节")
+    (holiday-fixed 10 3 "国庆节"))
+  "Pre-defined chinese public holidays.
+You can add this to your `calendar-holidays'.")
+
 
 ;;; Interfaces
 
@@ -135,34 +158,34 @@ You can add this to your `calendar-holidays'.")
   "China calendar extentions and more."
   :group 'calendar)
 
-(defcustom cal-china-x-important-holidays '()
-  "Most important holidays, colored with `cal-china-x-important-holidays-face'."
+(defcustom cal-china-x-priority1-holidays '()
+  "Highlighted by `cal-china-x-priority1-holiday-face'."
   :type 'symbol
   :group 'cal-china-x)
 
-(defcustom cal-china-x-misc-holidays '()
-  "Most misc holidays, colored with `cal-china-x-misc-holidays-face'."
+(defcustom cal-china-x-priority2-holidays '()
+  "Highlighted by `cal-china-x-priority2-holiday-face'."
   :type 'symbol
   :group 'cal-china-x)
 
-(defface cal-china-x-important-holiday-face
+(defface cal-china-x-priority1-holiday-face
   '((((class color) (background light))
      :background "red")
     (((class color) (background dark))
      :background "red")
     (t
      :inverse-video t))
-  "Face for indicating `cal-china-x-important-holidays'."
+  "Face for indicating `cal-china-x-priority1-holidays'."
   :group 'cal-china-x)
 
-(defface cal-china-x-misc-holiday-face
+(defface cal-china-x-priority2-holiday-face
   '((((class color) (background light))
      :background "green")
     (((class color) (background dark))
      :background "green")
     (t
      :inverse-video t))
-  "Face for indicating `cal-china-x-misc-holidays'."
+  "Face for indicating `cal-china-x-priority2-holidays'."
   :group 'cal-china-x)
 
 ;;;###autoload
@@ -186,31 +209,39 @@ calendar."
 	     (calendar-date-string birthday-gregorian-full))))
 
 ;;;###autoload
-(defun holiday-lunar (lunar-month lunar-day string)
-  "Like `holiday-fixed', but with LUNAR-MONTH and LUNAR-DAY."
+(defun holiday-lunar (lunar-month lunar-day string &optional num)
+  "Like `holiday-fixed', but with LUNAR-MONTH and LUNAR-DAY.
+When there are multiple days(like Run yue, 闰月), we use NUM to define
+which day(s) as holidays. The rules are:
+
+NUM = 0, only the earlier day.
+NUM = 1, only the later day.
+NUM with other values(default), both days."
   (let ((cn-years (chinese-year displayed-year))
         (ret '()))
-    (let ((date (calendar-gregorian-from-absolute
-                 (+ (cadr (assoc lunar-month cn-years)) (1- lunar-day)))))
-      (setq ret (append ret
-                        (holiday-fixed (car date)
-                                       (cadr date)
-                                       string))))
+    (unless (and num (= num 1))
+      (let ((date (calendar-gregorian-from-absolute
+                   (+ (cadr (assoc lunar-month cn-years)) (1- lunar-day)))))
+        (setq ret (append ret
+                          (holiday-fixed (car date)
+                                         (cadr date)
+                                         string)))))
     ;; 闰月, e.g., 2006-08-30
-    (when (> (length cn-years) 12)
-      (let ((run (car (remove-if 'null
-                                 (mapcar
-                                  (lambda (el)
-                                    (unless (integerp (car el))
-                                      el))
-                                  cn-years)))))
-        (when (= lunar-month (floor (car run)))
-          (let ((date (calendar-gregorian-from-absolute
-                       (+ (cadr run) (1- lunar-day)))))
-            (setq ret (append ret
-                              (holiday-fixed (car date)
-                                             (cadr date)
-                                             string)))))))
+    (unless (and num (= num 0))
+      (when (> (length cn-years) 12)
+        (let ((run (car (remove-if 'null
+                                   (mapcar
+                                    (lambda (el)
+                                      (unless (integerp (car el))
+                                        el))
+                                    cn-years)))))
+          (when (= lunar-month (floor (car run)))
+            (let ((date (calendar-gregorian-from-absolute
+                         (+ (cadr run) (1- lunar-day)))))
+              (setq ret (append ret
+                                (holiday-fixed (car date)
+                                               (cadr date)
+                                               string))))))))
     ret))
 
 ;;;###autoload
@@ -274,8 +305,7 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
                                                         'calendar-scroll-right))
           " " calendar-buffer)
 
-         ;; TODO, only do this after calendar has fully initialized!
-         '(cal-china-x-get-holiday date)
+         '(cal-china-x-get-holiday date) ; FIXME: how to ignore this column when it is "" ?
          '(calendar-date-string date t)
          '(cal-china-x-chinese-date-string date)
 
@@ -315,41 +345,20 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
   (add-hook 'calendar-move-hook 'update-calendar-mode-line)
 
   (setq chinese-calendar-celestial-stem cal-china-x-celestial-stem
-	chinese-calendar-terrestrial-branch cal-china-x-terrestrial-branch)
-
-  (setq local-holidays
-	'((holiday-fixed 1  1  "元旦")
-	  (holiday-chinese-new-year)
-	  (holiday-fixed 3  8  "妇女节")
-	  (holiday-fixed 3  12 "植树节")
-	  (holiday-fixed 5  1  "劳动节")
-	  (holiday-fixed 5  4  "青年节")
-	  (holiday-fixed 6  1  "儿童节")
-	  (holiday-fixed 9  10 "教师节")
-	  (holiday-fixed 10 1  "国庆节")
-	  (holiday-fixed 12 25 "圣诞节")
-
-	  (holiday-lunar 1 15 "元宵节")
-	  (holiday-lunar 5 5  "端午节")
-          (holiday-lunar 7 7  "七夕节")
-	  (holiday-lunar 9 9  "重阳节")
-	  (holiday-lunar 8 15 "中秋节")))
-
-  (setq calendar-holidays
-	(append general-holidays local-holidays)))
+	chinese-calendar-terrestrial-branch cal-china-x-terrestrial-branch))
 
 (defadvice calendar-mark-holidays (around mark-different-holidays activate)
   "Mark extra `xwl-important-holidays'."
-  (let ((calendar-holiday-marker 'cal-china-x-important-holiday-face)
-        (calendar-holidays cal-china-x-important-holidays))
+  (let ((calendar-holiday-marker 'cal-china-x-priority1-holiday-face)
+        (calendar-holidays cal-china-x-priority1-holidays))
     ad-do-it)
-  (let ((calendar-holiday-marker 'cal-china-x-misc-holiday-face)
-        (calendar-holidays cal-china-x-misc-holidays))
+  (let ((calendar-holiday-marker 'cal-china-x-priority2-holiday-face)
+        (calendar-holidays cal-china-x-priority2-holidays))
     ad-do-it)
   (let ((calendar-holidays
          (remove-if (lambda (i)
-                      (or (member i cal-china-x-important-holidays)
-                          (member i cal-china-x-misc-holidays)))
+                      (or (member i cal-china-x-priority1-holidays)
+                          (member i cal-china-x-priority2-holidays)))
                     calendar-holidays)))
     ad-do-it))
 
