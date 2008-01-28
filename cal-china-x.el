@@ -4,8 +4,8 @@
 
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 0.8
-;; Url: http://williamxu.net9.org/emacs.html
-;; Last updated: 2008/01/27
+;; Url: http://williamxu.net9.org
+;; Last updated: 2008/01/28
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
