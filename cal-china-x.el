@@ -5,7 +5,7 @@
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 0.8
 ;; Url: http://williamxu.net9.org
-;; Last updated: 2008/01/28
+;; Last updated: 2008/02/09
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -110,7 +110,7 @@ There is a short poem for remembering,
     春雨惊春清谷天，夏满芒夏暑相连，
     秋处露秋寒霜降，冬雪雪冬小大寒。")
 
-(defvar cal-china-x-japanese-holidays
+(defconst cal-china-x-japanese-holidays
   '((holiday-fixed 1 1 "元旦")
     (holiday-fixed 1 2 "公务员法定休息日")
     (holiday-fixed 1 3 "公务员法定休息日")
@@ -136,7 +136,7 @@ There is a short poem for remembering,
   "Pre-defined japanese public holidays.
 You can add this to your `calendar-holidays'.")
 
-(defvar cal-china-x-chinese-holidays
+(defconst cal-china-x-chinese-holidays
   '((holiday-fixed 1 1 "元旦")
     (holiday-lunar 12 30 "春节" 0)
     (holiday-lunar 1 1 "春节" 0)
