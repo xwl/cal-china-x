@@ -4,8 +4,7 @@
 
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 0.8
-;; Url: http://williamxu.net9.org
-;; Last updated: 2008/02/09
+;; Url: http://williamxu.net9.org/ref/cal-china-x.el
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -347,20 +346,36 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
   (setq chinese-calendar-celestial-stem cal-china-x-celestial-stem
 	chinese-calendar-terrestrial-branch cal-china-x-terrestrial-branch))
 
-(defadvice calendar-mark-holidays (around mark-different-holidays activate)
-  "Mark extra `xwl-important-holidays'."
-  (let ((calendar-holiday-marker 'cal-china-x-priority1-holiday-face)
-        (calendar-holidays cal-china-x-priority1-holidays))
-    ad-do-it)
-  (let ((calendar-holiday-marker 'cal-china-x-priority2-holiday-face)
-        (calendar-holidays cal-china-x-priority2-holidays))
-    ad-do-it)
-  (let ((calendar-holidays
-         (remove-if (lambda (i)
-                      (or (member i cal-china-x-priority1-holidays)
-                          (member i cal-china-x-priority2-holidays)))
-                    calendar-holidays)))
-    ad-do-it))
+(if (fboundp 'calendar-mark-holidays)
+    (defadvice calendar-mark-holidays (around mark-different-holidays activate)
+      "Mark extra `xwl-important-holidays'."
+      (let ((calendar-holiday-marker 'cal-china-x-priority1-holiday-face)
+            (calendar-holidays cal-china-x-priority1-holidays))
+        ad-do-it)
+      (let ((calendar-holiday-marker 'cal-china-x-priority2-holiday-face)
+            (calendar-holidays cal-china-x-priority2-holidays))
+        ad-do-it)
+      (let ((calendar-holidays
+             (remove-if (lambda (i)
+                          (or (member i cal-china-x-priority1-holidays)
+                              (member i cal-china-x-priority2-holidays)))
+                        calendar-holidays)))
+        ad-do-it))
+
+  (defadvice mark-calendar-holidays (around mark-different-holidays activate)
+    "Mark extra `xwl-important-holidays'."
+    (let ((calendar-holiday-marker 'cal-china-x-priority1-holiday-face)
+          (calendar-holidays cal-china-x-priority1-holidays))
+      ad-do-it)
+    (let ((calendar-holiday-marker 'cal-china-x-priority2-holiday-face)
+          (calendar-holidays cal-china-x-priority2-holidays))
+      ad-do-it)
+    (let ((calendar-holidays
+           (remove-if (lambda (i)
+                        (or (member i cal-china-x-priority1-holidays)
+                            (member i cal-china-x-priority2-holidays)))
+                      calendar-holidays)))
+      ad-do-it)))
 
 
 ;;; Implementations
