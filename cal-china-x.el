@@ -47,6 +47,8 @@
 
 (require 'calendar)
 (require 'cal-china)
+(eval-when-compile
+  (require 'cl))
 
 ;;; Variables
 
