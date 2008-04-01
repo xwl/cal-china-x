@@ -27,7 +27,7 @@
 ;;
 ;;   - Chinese localizations
 ;;   - Display holiday, lunar, horoscope, zodiac, solar term info on mode line
-;;   - Can define holidays using `holiday-lunar', `holiday-solar-term'
+;;   - Define holidays using `holiday-lunar', `holiday-solar-term'
 ;;   - Highlight holidays based on different priorities
 ;;   - Add `cal-china-x-chinese-holidays', `cal-china-x-japanese-holidays'.
 ;;
