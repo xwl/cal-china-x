@@ -347,7 +347,7 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
   (cond
    ((fboundp 'update-calendar-mode-line) ; < emacs 23
     (add-hook 'calendar-move-hook 'update-calendar-mode-line))
-   ((fboundp 'calendar-update-mode-line) ; > emacs 23
+   ((fboundp 'calendar-update-mode-line) ; >= emacs 23
     (add-hook 'calendar-move-hook 'calendar-update-mode-line)))
 
   (setq chinese-calendar-celestial-stem cal-china-x-celestial-stem
