@@ -3,7 +3,7 @@
 ;; Copyright (C) 2006, 2007, 2008 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 0.82
+;; Version: 0.8.3
 ;; Url: http://williamxu.net9.org/ref/cal-china-x.el
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -344,7 +344,11 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
                               'mouse-1 'calendar-scroll-left))
          ""))
 
-  (add-hook 'calendar-move-hook 'update-calendar-mode-line)
+  (cond
+   ((fboundp 'update-calendar-mode-line) ; < emacs 23
+    (add-hook 'calendar-move-hook 'update-calendar-mode-line))
+   ((fboundp 'calendar-update-mode-line) ; > emacs 23
+    (add-hook 'calendar-move-hook 'calendar-update-mode-line)))
 
   (setq chinese-calendar-celestial-stem cal-china-x-celestial-stem
 	chinese-calendar-terrestrial-branch cal-china-x-terrestrial-branch))
