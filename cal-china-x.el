@@ -213,38 +213,51 @@ calendar."
 ;;;###autoload
 (defun holiday-lunar (lunar-month lunar-day string &optional num)
   "Like `holiday-fixed', but with LUNAR-MONTH and LUNAR-DAY.
-When there are multiple days(like Run yue, 闰月), we use NUM to define
-which day(s) as holidays. The rules are:
+When there are multiple days(like Run Yue or 闰月, e.g.,
+2006-08-30), we use NUM to define which day(s) as holidays. The
+rules are:
 
 NUM = 0, only the earlier day.
 NUM = 1, only the later day.
-NUM with other values(default), both days."
-  (let ((cn-years (chinese-year displayed-year))
-        (ret '()))
-    (unless (and num (= num 1))
-      (let ((date (calendar-gregorian-from-absolute
-                   (+ (cadr (assoc lunar-month cn-years)) (1- lunar-day)))))
-        (setq ret (append ret
-                          (holiday-fixed (car date)
-                                         (cadr date)
-                                         string)))))
-    ;; 闰月, e.g., 2006-08-30
-    (unless (and num (= num 0))
-      (when (> (length cn-years) 12)
-        (let ((run (car (remove-if 'null
-                                   (mapcar
-                                    (lambda (el)
-                                      (unless (integerp (car el))
-                                        el))
-                                    cn-years)))))
-          (when (= lunar-month (floor (car run)))
-            (let ((date (calendar-gregorian-from-absolute
-                         (+ (cadr run) (1- lunar-day)))))
-              (setq ret (append ret
-                                (holiday-fixed (car date)
-                                               (cadr date)
-                                               string))))))))
-    ret))
+NUM with other values(default), all days(maybe one or two)."
+  (unless (integerp num)
+    (setq num 2))
+  (let* ((cn-years (chinese-year displayed-year))
+         (ret '()))
+    (setq ret (append ret (holiday-lunar-1 (assoc lunar-month cn-years)
+                                           lunar-day
+                                           string)))
+    (when (and (> (length cn-years) 12) (not (zerop num)))
+      (let ((run-yue '())
+            (years cn-years)
+            (i '()))
+        (while years
+          (setq i (car years)
+                years (cdr years))
+          (unless (integerp (car i))
+            (setq run-yue i)
+            (setq years nil)))
+        (when (= lunar-month (floor (car run-yue)))
+          (setq ret (append ret (holiday-lunar-1 run-yue
+                                                 lunar-day
+                                                 string))))))
+    (cond ((= num 0)
+           (when (car ret)
+             (list (car ret))))
+          ((= num 1)
+           (if (cadr ret)
+               (list (cadr ret))
+             ret))
+          (t
+           ret))))
+
+(defun holiday-lunar-1 (run-yue lunar-day string)
+  (let* ((date (calendar-gregorian-from-absolute
+                (+ (cadr run-yue) (1- lunar-day))))
+         (holiday (holiday-fixed (car date) (cadr date) string)))
+    ;; Same year?
+    (when (and holiday (= (nth 2 (caar holiday)) (nth 2 date)))
+      holiday)))
 
 ;;;###autoload
 (defun holiday-solar-term (solar-term str)
