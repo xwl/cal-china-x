@@ -1,4 +1,4 @@
-;;; cal-china-x.el --- Chinese calendar extras
+;;; cal-china-x.el --- Chinese calendar extras     -*- coding: utf-8; -*-
 
 ;; Copyright (C) 2006, 2007, 2008 William Xu
 
