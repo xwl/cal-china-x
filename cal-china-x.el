@@ -542,15 +542,25 @@ characters on the line."
 
 ;;; Compatabilities
 
-(when (< emacs-major-version 23)
+(if (> emacs-major-version 22)
+    (defadvice calendar-mark-holidays (around mark-different-holidays activate)
+      "Mark holidays with different priorities."
+      (let ((calendar-holiday-marker 'cal-china-x-priority1-holiday-face)
+            (calendar-holidays cal-china-x-priority1-holidays))
+        ad-do-it)
+      (let ((calendar-holiday-marker 'cal-china-x-priority2-holiday-face)
+            (calendar-holidays cal-china-x-priority2-holidays))
+        ad-do-it)
+      (let ((calendar-holidays
+             (remove-if (lambda (i)
+                          (or (member i cal-china-x-priority1-holidays)
+                              (member i cal-china-x-priority2-holidays)))
+                        calendar-holidays)))
+        ad-do-it))
   (defalias 'calendar-update-mode-line 'update-calendar-mode-line)
-  (defalias 'calendar-mark-holidays 'mark-calendar-holidays)
   (defalias 'calendar-chinese-year 'chinese-year)
-  )
 
-(add-hook 'calendar-move-hook 'calendar-update-mode-line)
-
-(defadvice calendar-mark-holidays (around mark-different-holidays activate)
+  (defadvice mark-calendar-holidays (around mark-different-holidays activate)
     "Mark holidays with different priorities."
     (let ((calendar-holiday-marker 'cal-china-x-priority1-holiday-face)
           (calendar-holidays cal-china-x-priority1-holidays))
@@ -564,6 +574,9 @@ characters on the line."
                             (member i cal-china-x-priority2-holidays)))
                       calendar-holidays)))
       ad-do-it))
+  )
+
+(add-hook 'calendar-move-hook 'calendar-update-mode-line)
 
 
 ;; setup
