@@ -3,7 +3,7 @@
 ;; Copyright (C) 2006, 2007, 2008 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 0.9
+;; Version: 1.0a
 ;; Url: http://williamxu.net9.org/ref/cal-china-x.el
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -223,7 +223,7 @@ NUM = 1, only the later day.
 NUM with other values(default), all days(maybe one or two)."
   (unless (integerp num)
     (setq num 2))
-  (let* ((cn-years (chinese-year displayed-year))
+  (let* ((cn-years (calendar-chinese-year displayed-year))
          (ret '()))
     (setq ret (append ret (holiday-lunar-1 (assoc lunar-month cn-years)
                                            lunar-day
@@ -358,45 +358,8 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
                               'mouse-1 'calendar-scroll-left))
          ""))
 
-  (cond
-   ((fboundp 'update-calendar-mode-line) ; < emacs 23
-    (add-hook 'calendar-move-hook 'update-calendar-mode-line))
-   ((fboundp 'calendar-update-mode-line) ; >= emacs 23
-    (add-hook 'calendar-move-hook 'calendar-update-mode-line)))
-
   (setq chinese-calendar-celestial-stem cal-china-x-celestial-stem
 	chinese-calendar-terrestrial-branch cal-china-x-terrestrial-branch))
-
-(if (fboundp 'calendar-mark-holidays)
-    (defadvice calendar-mark-holidays (around mark-different-holidays activate)
-      "Mark extra `xwl-important-holidays'."
-      (let ((calendar-holiday-marker 'cal-china-x-priority1-holiday-face)
-            (calendar-holidays cal-china-x-priority1-holidays))
-        ad-do-it)
-      (let ((calendar-holiday-marker 'cal-china-x-priority2-holiday-face)
-            (calendar-holidays cal-china-x-priority2-holidays))
-        ad-do-it)
-      (let ((calendar-holidays
-             (remove-if (lambda (i)
-                          (or (member i cal-china-x-priority1-holidays)
-                              (member i cal-china-x-priority2-holidays)))
-                        calendar-holidays)))
-        ad-do-it))
-
-  (defadvice mark-calendar-holidays (around mark-different-holidays activate)
-    "Mark extra `xwl-important-holidays'."
-    (let ((calendar-holiday-marker 'cal-china-x-priority1-holiday-face)
-          (calendar-holidays cal-china-x-priority1-holidays))
-      ad-do-it)
-    (let ((calendar-holiday-marker 'cal-china-x-priority2-holiday-face)
-          (calendar-holidays cal-china-x-priority2-holidays))
-      ad-do-it)
-    (let ((calendar-holidays
-           (remove-if (lambda (i)
-                        (or (member i cal-china-x-priority1-holidays)
-                            (member i cal-china-x-priority2-holidays)))
-                      calendar-holidays)))
-      ad-do-it)))
 
 
 ;;; Implementations
@@ -432,7 +395,7 @@ in a week."
     (if (< m 5)
         (let ((chinese-new-year
                (calendar-gregorian-from-absolute
-                (cadr (assoc 1 (chinese-year y))))))
+                (cadr (assoc 1 (calendar-chinese-year y))))))
           (if (calendar-date-is-visible-p chinese-new-year)
 	      `((,chinese-new-year
                  ,(format "%s年春节"
@@ -575,6 +538,32 @@ characters on the line."
 	    (/= i last)
            (calendar-insert-indented "" 0 t)    ;; Force onto following line
            (calendar-insert-indented "" indent)))));; Go to proper spot
+
+
+;;; Compatabilities
+
+(when (< emacs-major-version 23)
+  (defalias 'calendar-update-mode-line 'update-calendar-mode-line)
+  (defalias 'calendar-mark-holidays 'mark-calendar-holidays)
+  (defalias 'calendar-chinese-year 'chinese-year)
+  )
+
+(add-hook 'calendar-move-hook 'calendar-update-mode-line)
+
+(defadvice calendar-mark-holidays (around mark-different-holidays activate)
+    "Mark holidays with different priorities."
+    (let ((calendar-holiday-marker 'cal-china-x-priority1-holiday-face)
+          (calendar-holidays cal-china-x-priority1-holidays))
+      ad-do-it)
+    (let ((calendar-holiday-marker 'cal-china-x-priority2-holiday-face)
+          (calendar-holidays cal-china-x-priority2-holidays))
+      ad-do-it)
+    (let ((calendar-holidays
+           (remove-if (lambda (i)
+                        (or (member i cal-china-x-priority1-holidays)
+                            (member i cal-china-x-priority2-holidays)))
+                      calendar-holidays)))
+      ad-do-it))
 
 
 ;; setup
