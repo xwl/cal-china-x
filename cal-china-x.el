@@ -23,8 +23,7 @@
 
 ;;; Commentary:
 
-;; This package adds more chinese calendar supports and others,
-;; including:
+;; This extension mainly adds the following extra features:
 ;;
 ;;   - Chinese localizations
 ;;   - Display holiday, lunar, horoscope, zodiac, solar term info on mode line
@@ -49,8 +48,7 @@
 (require 'calendar)
 (require 'holidays)
 (require 'cal-china)
-(eval-when-compile
-  (require 'cl))
+(eval-when-compile (require 'cl))
 
 ;;; Variables
 
@@ -74,13 +72,14 @@
    "卅一" "卅二" "卅三" "卅四" "卅五" "卅六" "卅七" "卅八" "卅九" "卅十"])
 
 (defvar chinese-date-diary-pattern
-  '((year " *年" month " *月" day " *日 *[^\年0-9]") ; " *星期")
-    (year "-" month "-" day "[^0-9]")
-    (day "/" month "[^/0-9]")
-    (day "/" month "/" year "[^0-9]")
-    (backup day " *" monthname "\\W+\\<\\([^*0-9]\\|\\([0-9]+[:aApP]\\)\\)")
-    (day " *" monthname " *" year "[^0-9]")
-    (dayname "\\W")))
+  `((year "年" month "月" day "日" " 星期[" ,(mapconcat 'identity cal-china-x-days "") "]")
+    ,@(if (> emacs-major-version 22)
+          diary-iso-date-forms
+        '((month "[-/]" day "[^-/0-9]")
+          (year "[-/]" month "[-/]" day "[^0-9]")
+          (monthname "-" day "[^-0-9]")
+          (year "-" monthname "-" day "[^0-9]")
+          (dayname "\\W")))))
 
 (defconst cal-china-x-horoscope-name
   '(((3  21) (4  19) "白羊")
@@ -308,58 +307,11 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
   ;; chinese month and year
   (setq calendar-font-lock-keywords
         (append calendar-font-lock-keywords
-                '(("[0-9]+年\\ *[0-9]+月"
-                   . font-lock-function-name-face))))
-
-  (setq calendar-mode-line-format
-        (list
-         (concat
-          (propertize "<"
-                      'help-echo "mouse-1: previous month"
-                      'mouse-face 'mode-line-highlight
-                      'keymap (make-mode-line-mouse-map 'mouse-1
-                                                        'calendar-scroll-right))
-          " " calendar-buffer)
-
-         '(cal-china-x-get-holiday date) ; FIXME: how to ignore this column when it is "" ?
-         '(calendar-date-string date t)
-         '(cal-china-x-chinese-date-string date)
-
-         (concat
-          (propertize
-           (substitute-command-keys
-            "\\<calendar-mode-map>\\[calendar-goto-info-node] info")
-           'help-echo "mouse-1: read Info on Calendar"
-           'mouse-face 'mode-line-highlight
-           'keymap (make-mode-line-mouse-map 'mouse-1 'calendar-goto-info-node))
-          " / "
-          (propertize
-           (substitute-command-keys
-            " \\<calendar-mode-map>\\[calendar-other-month] other")
-           'help-echo "mouse-1: choose another month"
-           'mouse-face 'mode-line-highlight
-           'keymap (make-mode-line-mouse-map
-                    'mouse-1 'mouse-calendar-other-month))
-          " / "
-          (propertize
-           (substitute-command-keys
-            "\\<calendar-mode-map>\\[calendar-goto-today] today")
-           'help-echo "mouse-1: go to today's date"
-           'mouse-face 'mode-line-highlight
-           'keymap (make-mode-line-mouse-map 'mouse-1 #'calendar-goto-today)))
-
-         ;; FIXME: This right `>' can not be displayed correctly. Also,
-         ;; it looks like if i don't append an additional "" at end,
-         ;; even more right partial info will disappear.
-         (propertize ">"
-                     'help-echo "mouse-1: next month"
-                     'mouse-face 'mode-line-highlight
-                     'keymap (make-mode-line-mouse-map
-                              'mouse-1 'calendar-scroll-left))
-         ""))
+                '(("[0-9]+年\\ *[0-9]+月" . font-lock-function-name-face))))
 
   (setq chinese-calendar-celestial-stem cal-china-x-celestial-stem
-	chinese-calendar-terrestrial-branch cal-china-x-terrestrial-branch))
+	chinese-calendar-terrestrial-branch cal-china-x-terrestrial-branch)
+  )
 
 
 ;;; Implementations
@@ -484,8 +436,8 @@ extra day appended."
   "The N-th name of the Chinese sexagesimal cycle.
 N congruent to 1 gives the first name, N congruent to 2 gives the second name,
 ..., N congruent to 60 gives the sixtieth name."
-  ;; "%s-%s" -> "%s%s", since Chinese characters are tight one by one,
-  ;; no extra `-' needed.
+  ;; Change "%s-%s" to "%s%s", since adding the extra `-' between two Chinese
+  ;; characters looks stupid.
   (format "%s%s"
           (aref chinese-calendar-celestial-stem (% (1- n) 10))
           (aref chinese-calendar-terrestrial-branch (% (1- n) 12))))
@@ -543,20 +495,50 @@ characters on the line."
 ;;; Compatabilities
 
 (if (> emacs-major-version 22)
-    (defadvice calendar-mark-holidays (around mark-different-holidays activate)
-      "Mark holidays with different priorities."
-      (let ((calendar-holiday-marker 'cal-china-x-priority1-holiday-face)
-            (calendar-holidays cal-china-x-priority1-holidays))
-        ad-do-it)
-      (let ((calendar-holiday-marker 'cal-china-x-priority2-holiday-face)
-            (calendar-holidays cal-china-x-priority2-holidays))
-        ad-do-it)
-      (let ((calendar-holidays
-             (remove-if (lambda (i)
-                          (or (member i cal-china-x-priority1-holidays)
-                              (member i cal-china-x-priority2-holidays)))
-                        calendar-holidays)))
-        ad-do-it))
+    (progn
+      (defadvice calendar-mark-holidays (around mark-different-holidays activate)
+        "Mark holidays with different priorities."
+        (let ((calendar-holiday-marker 'cal-china-x-priority1-holiday-face)
+              (calendar-holidays cal-china-x-priority1-holidays))
+          ad-do-it)
+        (let ((calendar-holiday-marker 'cal-china-x-priority2-holiday-face)
+              (calendar-holidays cal-china-x-priority2-holidays))
+          ad-do-it)
+        (let ((calendar-holidays
+               (remove-if (lambda (i)
+                            (or (member i cal-china-x-priority1-holidays)
+                                (member i cal-china-x-priority2-holidays)))
+                          calendar-holidays)))
+          ad-do-it))
+
+      ;; I'd like it to occupy all horizontal space as in 22.
+      (add-hook 'window-size-change-functions
+                (lambda (_)
+                  (setq calendar-right-margin (- (frame-width) calendar-left-margin))))
+
+      (setq calendar-mode-line-format
+            (list
+             (calendar-mode-line-entry 'calendar-scroll-right "previous month" "<")
+             "Calendar"
+
+             '(cal-china-x-get-holiday date)
+             '(calendar-date-string date t)
+             '(cal-china-x-chinese-date-string date)
+
+             (concat
+              (calendar-mode-line-entry 'calendar-goto-info-node "read Info on Calendar"
+                                        nil "info")
+              " / "
+              (calendar-mode-line-entry 'calendar-other-month "choose another month"
+                                        nil "other")
+              " / "
+              (calendar-mode-line-entry 'calendar-goto-today "go to today's date"
+                                        nil "today"))
+             ;; '(calendar-date-string (calendar-current-date) t)
+             (calendar-mode-line-entry 'calendar-scroll-left "next month" ">")
+             ""))
+      )
+  ;; <= 22
   (defalias 'calendar-update-mode-line 'update-calendar-mode-line)
   (defalias 'calendar-chinese-year 'chinese-year)
 
@@ -574,6 +556,53 @@ characters on the line."
                             (member i cal-china-x-priority2-holidays)))
                       calendar-holidays)))
       ad-do-it))
+
+  (setq calendar-mode-line-format
+        (list
+         (concat
+          (propertize "<"
+                      'help-echo "mouse-1: previous month"
+                      'mouse-face 'mode-line-highlight
+                      'keymap (make-mode-line-mouse-map 'mouse-1
+                                                        'calendar-scroll-right))
+          " " calendar-buffer)
+
+         '(cal-china-x-get-holiday date)
+         '(calendar-date-string date t)
+         '(cal-china-x-chinese-date-string date)
+
+         (concat
+          (propertize
+           (substitute-command-keys
+            "\\<calendar-mode-map>\\[calendar-goto-info-node] info")
+           'help-echo "mouse-1: read Info on Calendar"
+           'mouse-face 'mode-line-highlight
+           'keymap (make-mode-line-mouse-map 'mouse-1 'calendar-goto-info-node))
+          " / "
+          (propertize
+           (substitute-command-keys
+            " \\<calendar-mode-map>\\[calendar-other-month] other")
+           'help-echo "mouse-1: choose another month"
+           'mouse-face 'mode-line-highlight
+           'keymap (make-mode-line-mouse-map
+                    'mouse-1 'mouse-calendar-other-month))
+          " / "
+          (propertize
+           (substitute-command-keys
+            "\\<calendar-mode-map>\\[calendar-goto-today] today")
+           'help-echo "mouse-1: go to today's date"
+           'mouse-face 'mode-line-highlight
+           'keymap (make-mode-line-mouse-map 'mouse-1 #'calendar-goto-today)))
+
+         ;; FIXME: This right `>' can not be displayed correctly. Also,
+         ;; it looks like if i don't append an additional "" at end,
+         ;; even more right partial info will disappear.
+         (propertize ">"
+                     'help-echo "mouse-1: next month"
+                     'mouse-face 'mode-line-highlight
+                     'keymap (make-mode-line-mouse-map
+                              'mouse-1 'calendar-scroll-left))
+         ""))
   )
 
 (add-hook 'calendar-move-hook 'calendar-update-mode-line)
