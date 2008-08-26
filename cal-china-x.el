@@ -3,7 +3,7 @@
 ;; Copyright (C) 2006, 2007, 2008 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 1.0
+;; Version: 1.0a
 ;; Url: http://williamxu.net9.org/ref/cal-china-x.el
 
 ;; This program is free software; you can redistribute it and/or modify
