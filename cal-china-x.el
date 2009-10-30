@@ -3,7 +3,7 @@
 ;; Copyright (C) 2006, 2007, 2008, 2009 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 1.0a
+;; Version: 1.1
 ;; Url: http://xwl.appspot.com/ref/cal-china-x.el
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -533,7 +533,23 @@ line."
              "Calendar"
 
              '(cal-china-x-get-holiday date)
-             '(calendar-date-string date t)
+             '(concat (calendar-date-string date t)
+                      ;; FIXME: There should be a better way of finding week value
+                      ;; for a date.
+                      (format-time-string
+                       " 第%V周"
+                       (date-to-time    ; "%Y-%m-%dT%T%z"
+                        (concat (apply 'format 
+                                       "%02d-%02d-%02d" 
+                                       (mapcar (lambda (func) 
+                                                 (funcall func date))
+                                               '(extract-calendar-year
+                                                 extract-calendar-month
+                                                 extract-calendar-day)))
+                                ;; (format-time-string "T%T%z")
+                                "T00:00:00+0000"
+                                ))))
+
              '(cal-china-x-chinese-date-string date)
 
              (concat
@@ -628,7 +644,23 @@ characters on the line."
           " " calendar-buffer)
 
          '(cal-china-x-get-holiday date)
-         '(calendar-date-string date t)
+         '(concat (calendar-date-string date t)
+                  ;; FIXME: There should be a better way of finding week value
+                  ;; for a date.
+                  (format-time-string
+                   " 第%V周"
+                   (date-to-time        ; "%Y-%m-%dT%T%z"
+                    (concat (apply 'format 
+                                   "%02d-%02d-%02d" 
+                                   (mapcar (lambda (func) 
+                                             (funcall func date))
+                                           '(extract-calendar-year
+                                             extract-calendar-month
+                                             extract-calendar-day)))
+                            ;; (format-time-string "T%T%z")
+                            "T00:00:00+0000"
+                            ))))
+
          '(cal-china-x-chinese-date-string date)
 
          (concat
