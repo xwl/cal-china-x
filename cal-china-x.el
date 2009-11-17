@@ -229,10 +229,8 @@ NUM with other values(default), all days(maybe one or two)."
   (unless (integerp num)
     (setq num 2))
   (let* ((cn-years (calendar-chinese-year displayed-year))
-         (ret '()))
-    (setq ret (append ret (holiday-lunar-1 (assoc lunar-month cn-years)
-                                           lunar-day
-                                           string)))
+         (ret (holiday-lunar-1 
+               (assoc lunar-month cn-years) lunar-day string)))
     (when (and (> (length cn-years) 12) (not (zerop num)))
       (let ((run-yue '())
             (years cn-years)
@@ -244,16 +242,12 @@ NUM with other values(default), all days(maybe one or two)."
             (setq run-yue i)
             (setq years nil)))
         (when (= lunar-month (floor (car run-yue)))
-          (setq ret (append ret (holiday-lunar-1 run-yue
-                                                 lunar-day
-                                                 string))))))
+          (setq ret (append ret (holiday-lunar-1
+                                 run-yue lunar-day string))))))
     (cond ((= num 0)
-           (when (car ret)
-             (list (car ret))))
-          ((= num 1)
-           (if (cadr ret)
-               (list (cadr ret))
-             ret))
+           (when (car ret) (list (car ret))))
+          ((= num 1) 
+           (if (cadr ret) (list (cadr ret)) ret))
           (t
            ret))))
 
