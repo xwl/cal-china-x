@@ -33,8 +33,8 @@
 ;; To use, add something like the following to your .emacs:
 ;;     (require 'cal-china-x)
 ;;     (setq mark-holidays-in-calendar t)
-;;     (setq cal-china-x-priority1-holidays cal-china-x-chinese-holidays)
-;;     (setq calendar-holidays cal-china-x-priority1-holidays)
+;;     (setq cal-china-x-important-holidays cal-china-x-chinese-holidays)
+;;     (setq calendar-holidays cal-china-x-important-holidays)
 
 ;;; History
 
@@ -166,34 +166,34 @@ You can add this to your `calendar-holidays'.")
   "China calendar extentions and more."
   :group 'calendar)
 
-(defcustom cal-china-x-priority1-holidays '()
-  "Highlighted by `cal-china-x-priority1-holiday-face'."
+(defcustom cal-china-x-important-holidays '()
+  "Highlighted by `cal-china-x-important-holiday-face'."
   :type 'symbol
   :group 'cal-china-x)
 
-(defcustom cal-china-x-priority2-holidays '()
-  "Highlighted by `cal-china-x-priority2-holiday-face'."
+(defcustom cal-china-x-general-holidays '()
+  "Highlighted by `cal-china-x-general-holiday-face'."
   :type 'symbol
   :group 'cal-china-x)
 
-(defface cal-china-x-priority1-holiday-face
+(defface cal-china-x-important-holiday-face
   '((((class color) (background light))
      :background "red")
     (((class color) (background dark))
      :background "red")
     (t
      :inverse-video t))
-  "Face for indicating `cal-china-x-priority1-holidays'."
+  "Face for indicating `cal-china-x-important-holidays'."
   :group 'cal-china-x)
 
-(defface cal-china-x-priority2-holiday-face
+(defface cal-china-x-general-holiday-face
   '((((class color) (background light))
      :background "green")
     (((class color) (background dark))
      :background "green")
     (t
      :inverse-video t))
-  "Face for indicating `cal-china-x-priority2-holidays'."
+  "Face for indicating `cal-china-x-general-holidays'."
   :group 'cal-china-x)
 
 (defcustom cal-china-x-custom-week-start-date '()
@@ -512,16 +512,16 @@ N congruent to 1 gives the first name, N congruent to 2 gives the second name,
 
 (defadvice calendar-mark-holidays (around mark-different-holidays activate)
   "Mark holidays with different priorities."
-  (let ((calendar-holiday-marker 'cal-china-x-priority1-holiday-face)
-        (calendar-holidays cal-china-x-priority1-holidays))
+  (let ((calendar-holiday-marker 'cal-china-x-important-holiday-face)
+        (calendar-holidays cal-china-x-important-holidays))
     ad-do-it)
-  (let ((calendar-holiday-marker 'cal-china-x-priority2-holiday-face)
-        (calendar-holidays cal-china-x-priority2-holidays))
+  (let ((calendar-holiday-marker 'cal-china-x-general-holiday-face)
+        (calendar-holidays cal-china-x-general-holidays))
     ad-do-it)
   (let ((calendar-holidays
          (remove-if (lambda (i)
-                      (or (member i cal-china-x-priority1-holidays)
-                          (member i cal-china-x-priority2-holidays)))
+                      (or (member i cal-china-x-important-holidays)
+                          (member i cal-china-x-general-holidays)))
                     calendar-holidays)))
     ad-do-it))
 
