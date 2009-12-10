@@ -196,6 +196,15 @@ You can add this to your `calendar-holidays'.")
   "Face for indicating `cal-china-x-priority2-holidays'."
   :group 'cal-china-x)
 
+(defcustom cal-china-x-custom-week-start-date '()
+  "The month and day of first Monday in your custom week diary.
+
+e.g., '(9 20) means from every year, Sep 20th will be defined as
+the first week.  This could be useful in some circumstances, such
+as schools, where people may use some specific school diary."
+  :type 'symbol
+  :group 'cal-china-x)
+
 ;;;###autoload
 (defun cal-china-x-birthday-from-chinese (lunar-month lunar-day)
   "Return birthday date this year in Gregorian form.
@@ -323,22 +332,13 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
          "Calendar"
 
          '(cal-china-x-get-holiday date)
+
          '(concat (calendar-date-string date t)
-                  ;; FIXME: There should be a better way of finding week value
-                  ;; for a date.
-                  (format-time-string
-                   " 第%V周"
-                   (date-to-time        ; "%Y-%m-%dT%T%z"
-                    (concat (apply 'format 
-                                   "%02d-%02d-%02d" 
-                                   (mapcar (lambda (func) 
-                                             (funcall func date))
-                                           '(calendar-extract-year
-                                             calendar-extract-month
-                                             calendar-extract-day)))
-                            ;; (format-time-string "T%T%z")
-                            "T00:00:00+0000"
-                            ))))
+                  (format " 第%d周" 
+                          (funcall (if cal-china-x-custom-week-start-date
+                                       'cal-china-x-custom-week-of-date
+                                     'cal-china-x-week-of-date)
+                                   date)))
 
          '(cal-china-x-chinese-date-string date)
 
@@ -351,11 +351,12 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
           " / "
           (calendar-mode-line-entry 'calendar-goto-today "go to today's date"
                                     nil "today"))
-         ;; '(calendar-date-string (calendar-current-date) t)
+
          (calendar-mode-line-entry 'calendar-scroll-left "next month" ">")
          ""))
 
-  (add-hook 'calendar-move-hook 'calendar-update-mode-line))
+  (add-hook 'calendar-move-hook 'calendar-update-mode-line)
+  (add-hook 'calendar-initial-window-hook 'calendar-update-mode-line))
 
 
 ;;; Implementations
@@ -469,6 +470,29 @@ extra day appended."
       (setq cal-china-x-solar-term-year
             (calendar-extract-year
              (caar cal-china-x-solar-term-alist)))))
+
+;; ,----
+;; | week
+;; `----
+
+(defun cal-china-x-week-of-date (date)
+  "Get week number from DATE."
+  (car (calendar-iso-from-absolute (calendar-absolute-from-gregorian date))))
+
+(defun cal-china-x-custom-week-of-date (date)
+  "Similar to `cal-china-x-week-of-date' but starting from `cal-china-x-custom-week-start-date'."
+  (let ((y (calendar-extract-year date)))
+    (when (or (< (calendar-extract-month date) 
+             (car cal-china-x-custom-week-start-date))
+          (< (calendar-extract-day date) 
+             (cadr cal-china-x-custom-week-start-date)))
+        (setq y (1- y)))
+    (ceiling (/ (cal-china-x-days-between 
+                 date (append cal-china-x-custom-week-start-date (list y)))
+                7.0))))
+
+(defun cal-china-x-days-between (date1 date2)
+  (apply '- (mapcar 'calendar-absolute-from-gregorian (list date1 date2))))
 
 
 ;;; Modifications to Standard Functions
