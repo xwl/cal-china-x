@@ -103,7 +103,7 @@
 
 (defconst cal-china-x-zodiac-name
   ["鼠" "牛" "虎" "兔" "龙" "蛇" "马" "羊" "猴" "鸡" "狗" "猪"]
-  "The zodiac(Sheng Xiao) when you were born.")
+  "The zodiac(生肖) when you were born.")
 
 ;; for ref, http://www.geocities.com/calshing/chinesecalendar.htm
 (defconst cal-china-x-solar-term-name
@@ -228,6 +228,7 @@ calendar."
 ;;;###autoload
 (defun holiday-lunar (lunar-month lunar-day string &optional num)
   "Like `holiday-fixed', but with LUNAR-MONTH and LUNAR-DAY.
+
 When there are multiple days(like Run Yue or 闰月, e.g.,
 2006-08-30), we use NUM to define which day(s) as holidays. The
 rules are:
@@ -273,12 +274,25 @@ NUM with other values(default), all days(maybe one or two)."
   "A holiday(STR) on SOLAR-TERM day.
 See `cal-china-x-solar-term-name' for a list of solar term names ."
   (cal-china-x-sync-solar-term displayed-year)
-  (let ((l cal-china-x-solar-term-alist)
-        date)
-    (dolist (i l)
+  (let ((terms cal-china-x-solar-term-alist)
+        i date)
+    (while terms
+      (setq i (car terms)
+            terms (cdr terms))
       (when (string= (cdr i) solar-term)
-        (setq l '()
-              date (car i))))
+        (let ((m (caar i))
+              (y (caddar i)))
+          ;; '(11 12 1), '(12 1 2)
+          (when (or (and (cal-china-x-cross-year-view-p)
+                         (or (and (= displayed-month 12) 
+                                  (= m 1)
+                                  (= y (1+ displayed-year)))
+                             (and (= displayed-month 1)
+                                  (= m 12)
+                                  (= y (1- displayed-year)))))
+                    (= y displayed-year))
+            (setq terms '()
+                  date (car i))))))
     (holiday-fixed (car date) (cadr date) str)))
 
 (defun cal-china-x-calendar-display-form (date)
@@ -298,7 +312,7 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
          (cn-day   (cadddr cn-date)))
     (format "%s%s年%s%s%s(%s)%s"
             (calendar-chinese-sexagesimal-name cn-year)
-            (cal-china-x-get-zodiac date)
+            (aref cal-china-x-zodiac-name (% (1- cn-year) 12))
             (aref cal-china-x-month-name (1-  (floor cn-month)))
             (if (integerp cn-month) "" "(闰月)")
             (aref cal-china-x-day-name (1- cn-day))
@@ -371,16 +385,14 @@ in a week."
   (aref cal-china-x-days num))
 
 (defun cal-china-x-get-horoscope (month day)
-  "Return horoscope on MONTH(1-12) DAY(1-31)."
+  "Return horoscope(星座) on MONTH(1-12) DAY(1-31)."
   (catch 'return
     (mapc
      (lambda (el)
        (let ((start (car el))
              (end (cadr el)))
-         (when (or (and (= month (car start))
-                        (>= day (cadr start)))
-                   (and (= month (car end))
-                        (<= day (cadr end))))
+         (when (or (and (= month (car start)) (>= day (cadr start)))
+                   (and (= month (car end)) (<= day (cadr end))))
            (throw 'return (caddr el)))))
      cal-china-x-horoscope-name)))
 
@@ -399,20 +411,10 @@ in a week."
                           (calendar-chinese-sexagesimal-name
                            (+ y 57))))))))))
 
-(defun cal-china-x-get-zodiac (&optional date)
-  "Get zodiac(Sheng Xiao) on DATE."
-  (let ((n (cadr (calendar-chinese-from-absolute
-                  (calendar-absolute-from-gregorian
-                   (or date (calendar-current-date)))))))
-    (aref cal-china-x-zodiac-name (% (1- n) 12))))
-
-(defun cal-china-x-get-solar-term (&optional date)
-  (unless date
-    (setq date (calendar-current-date)))
+(defun cal-china-x-get-solar-term (date)
   (let ((year (calendar-extract-year date)))
     (cal-china-x-sync-solar-term year)
-    (or (cdr (assoc date cal-china-x-solar-term-alist))
-        "")))
+    (or (cdr (assoc date cal-china-x-solar-term-alist)) "")))
 
 (defun cal-china-x-solar-term-alist-new (year)
   "Return a solar-term alist for YEAR."
@@ -441,11 +443,9 @@ in a week."
 Each solar term is separated by 15 longtitude degrees or so, plus an
 extra day appended."
   (cal-china-x-gregorian-from-astro
-    (solar-date-next-longitude
-     (cal-china-x-astro-from-gregorian
-      (calendar-gregorian-from-absolute
-       (1+ (calendar-absolute-from-gregorian date))))
-     15)))
+   (solar-date-next-longitude
+    (calendar-astro-from-absolute
+     (1+ (calendar-absolute-from-gregorian date))) 15)))
 
 (defun cal-china-x-get-holiday (date)
   (when (and (boundp 'displayed-month)
@@ -460,17 +460,29 @@ extra day appended."
 ;; cached solar terms in a year
 (defvar cal-china-x-solar-term-alist nil) ; e.g., '(((1 20 2008) "春分") ...)
 (defvar cal-china-x-solar-term-year nil)
+(defvar cal-china-x-solar-term-neighbour-year-cached nil)
 
 (defun cal-china-x-sync-solar-term (year)
   "Sync `cal-china-x-solar-term-alist' and `cal-china-x-solar-term-year' to YEAR."
-  (unless (and cal-china-x-solar-term-year
-               (= cal-china-x-solar-term-year year))
-      (setq cal-china-x-solar-term-alist
-            (cal-china-x-solar-term-alist-new year))
-      (setq cal-china-x-solar-term-year
-            (calendar-extract-year
-             (caar cal-china-x-solar-term-alist)))))
+  (cond ((or (not cal-china-x-solar-term-year)
+             (> (abs (- year cal-china-x-solar-term-year)) 1))
+         (setq cal-china-x-solar-term-alist
+               (cal-china-x-solar-term-alist-new year))
+         (setq cal-china-x-solar-term-year year)
+         (setq cal-china-x-solar-term-neighbour-year-cached nil))
 
+        ((and (not cal-china-x-solar-term-neighbour-year-cached)
+              (cal-china-x-cross-year-view-p)
+              (= (abs (- year displayed-year)) 1))
+         (setq cal-china-x-solar-term-alist
+               (append cal-china-x-solar-term-alist 
+                       (cal-china-x-solar-term-alist-new year)))
+         (setq cal-china-x-solar-term-neighbour-year-cached t))))
+
+;; When months are: '(11 12 1), '(12 1 2)
+(defun cal-china-x-cross-year-view-p ()
+  (or (= displayed-month 12) (= displayed-month 1)))
+      
 ;; ,----
 ;; | week
 ;; `----
