@@ -3,7 +3,7 @@
 ;; Copyright (C) 2006, 2007, 2008, 2009 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 2.0
+;; Version: 2.1
 ;; Url: http://xwl.appspot.com/ref/cal-china-x.el
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -457,7 +457,11 @@ extra day appended."
 
 (defun cal-china-x-sync-solar-term (year)
   "Sync `cal-china-x-solar-term-alist' and `cal-china-x-solar-term-years' to YEAR."
-  (cond ((not cal-china-x-solar-term-years)
+  (cond ((or (not cal-china-x-solar-term-years)
+             ;; TODO: Seems calendar-update-mode-line is called too early in
+             ;; calendar-mode.
+             (not (boundp 'displayed-year))
+             (not (boundp 'displayed-month)))
          (setq cal-china-x-solar-term-alist
                (cal-china-x-solar-term-alist-new year))
          (setq cal-china-x-solar-term-years (list year)))
