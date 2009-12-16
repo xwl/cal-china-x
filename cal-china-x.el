@@ -335,11 +335,6 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
   (setq calendar-chinese-terrestrial-branch cal-china-x-celestial-stem
 	calendar-chinese-terrestrial-branch cal-china-x-terrestrial-branch)
 
-  ;; I'd like it to occupy all horizontal space as in 22.
-  (add-hook 'window-size-change-functions
-            (lambda (_)
-              (setq calendar-right-margin (- (frame-width) calendar-left-margin))))
-
   (setq calendar-mode-line-format
         (list
          (calendar-mode-line-entry 'calendar-scroll-right "previous month" "<")
@@ -356,18 +351,17 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
 
          '(cal-china-x-chinese-date-string date)
 
-         (concat
-          (calendar-mode-line-entry 'calendar-goto-info-node "read Info on Calendar"
-                                    nil "info")
-          " / "
-          (calendar-mode-line-entry 'calendar-other-month "choose another month"
-                                    nil "other")
-          " / "
-          (calendar-mode-line-entry 'calendar-goto-today "go to today's date"
-                                    nil "today"))
+         ;; (concat
+         ;;  (calendar-mode-line-entry 'calendar-goto-info-node "read Info on Calendar"
+         ;;                            nil "info")
+         ;;  " / "
+         ;;  (calendar-mode-line-entry 'calendar-other-month "choose another month"
+         ;;                            nil "other")
+         ;;  " / "
+         ;;  (calendar-mode-line-entry 'calendar-goto-today "go to today's date"
+         ;;                            nil "today"))
 
-         (calendar-mode-line-entry 'calendar-scroll-left "next month" ">")
-         ""))
+         (calendar-mode-line-entry 'calendar-scroll-left "next month" ">")))
 
   (add-hook 'calendar-move-hook 'calendar-update-mode-line)
   (add-hook 'calendar-initial-window-hook 'calendar-update-mode-line))
@@ -457,27 +451,25 @@ extra day appended."
           (setq str (concat str " " (cadr i)))))
       str)))
 
-;; cached solar terms in a year
+;; cached solar terms for two neighbour years at most.
 (defvar cal-china-x-solar-term-alist nil) ; e.g., '(((1 20 2008) "春分") ...)
-(defvar cal-china-x-solar-term-year nil)
-(defvar cal-china-x-solar-term-neighbour-year-cached nil)
+(defvar cal-china-x-solar-term-years nil)
 
 (defun cal-china-x-sync-solar-term (year)
-  "Sync `cal-china-x-solar-term-alist' and `cal-china-x-solar-term-year' to YEAR."
-  (cond ((or (not cal-china-x-solar-term-year)
-             (> (abs (- year cal-china-x-solar-term-year)) 1))
+  "Sync `cal-china-x-solar-term-alist' and `cal-china-x-solar-term-years' to YEAR."
+  (cond ((not cal-china-x-solar-term-years)
          (setq cal-china-x-solar-term-alist
                (cal-china-x-solar-term-alist-new year))
-         (setq cal-china-x-solar-term-year year)
-         (setq cal-china-x-solar-term-neighbour-year-cached nil))
-
-        ((and (not cal-china-x-solar-term-neighbour-year-cached)
-              (cal-china-x-cross-year-view-p)
-              (= (abs (- year displayed-year)) 1))
+         (setq cal-china-x-solar-term-years (list year)))
+        ((not (memq year cal-china-x-solar-term-years))
          (setq cal-china-x-solar-term-alist
-               (append cal-china-x-solar-term-alist 
-                       (cal-china-x-solar-term-alist-new year)))
-         (setq cal-china-x-solar-term-neighbour-year-cached t))))
+               (append 
+                (remove-if-not (lambda (i) (eq (caddar i) displayed-year))
+                               cal-china-x-solar-term-alist)
+                (cal-china-x-solar-term-alist-new year)))
+         (setq cal-china-x-solar-term-years
+               (cons year (remove-if-not (lambda (i) (eq i displayed-year))
+                                         cal-china-x-solar-term-years))))))
 
 ;; When months are: '(11 12 1), '(12 1 2)
 (defun cal-china-x-cross-year-view-p ()
