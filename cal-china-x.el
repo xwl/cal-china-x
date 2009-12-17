@@ -3,7 +3,7 @@
 ;; Copyright (C) 2006, 2007, 2008, 2009 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 2.1
+;; Version: 2.2
 ;; Url: http://xwl.appspot.com/ref/cal-china-x.el
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -332,7 +332,7 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
         (append calendar-font-lock-keywords
                 '(("[0-9]+年\\ *[0-9]+月" . font-lock-function-name-face))))
 
-  (setq calendar-chinese-terrestrial-branch cal-china-x-celestial-stem
+  (setq calendar-chinese-celestial-stem cal-china-x-celestial-stem
 	calendar-chinese-terrestrial-branch cal-china-x-terrestrial-branch)
 
   (setq calendar-mode-line-format
@@ -515,7 +515,7 @@ N congruent to 1 gives the first name, N congruent to 2 gives the second name,
   ;; Change "%s-%s" to "%s%s", since adding the extra `-' between two Chinese
   ;; characters looks stupid.
   (format "%s%s"
-          (aref calendar-chinese-terrestrial-branch (% (1- n) 10))
+          (aref calendar-chinese-celestial-stem (% (1- n) 10))
           (aref calendar-chinese-terrestrial-branch (% (1- n) 12))))
 
 (defadvice calendar-mark-holidays (around mark-different-holidays activate)
