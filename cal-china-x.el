@@ -245,7 +245,7 @@ shows that it does not recognize Run Yue at all."
   (unless (integerp num)
     (setq num 2))
   (let* ((cn-years (calendar-chinese-year displayed-year))
-         (ret (holiday-lunar-1 
+         (ret (holiday-lunar-1
                (assoc lunar-month cn-years) lunar-day string)))
     (when (and (> (length cn-years) 12) (not (zerop num)))
       (let ((run-yue '())
@@ -262,7 +262,7 @@ shows that it does not recognize Run Yue at all."
                                  run-yue lunar-day string))))))
     (cond ((= num 0)
            (when (car ret) (list (car ret))))
-          ((= num 1) 
+          ((= num 1)
            (if (cadr ret) (list (cadr ret)) ret))
           (t
            ret))))
@@ -290,7 +290,7 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
               (y (caddar i)))
           ;; '(11 12 1), '(12 1 2)
           (when (or (and (cal-china-x-cross-year-view-p)
-                         (or (and (= displayed-month 12) 
+                         (or (and (= displayed-month 12)
                                   (= m 1)
                                   (= y (1+ displayed-year)))
                              (and (= displayed-month 1)
@@ -349,7 +349,7 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
          '(cal-china-x-get-holiday date)
 
          '(concat (calendar-date-string date t)
-                  (format " 第%d周" 
+                  (format " 第%d周"
                           (funcall (if cal-china-x-custom-week-start-date
                                        'cal-china-x-custom-week-of-date
                                      'cal-china-x-week-of-date)
@@ -473,7 +473,7 @@ extra day appended."
          (setq cal-china-x-solar-term-years (list year)))
         ((not (memq year cal-china-x-solar-term-years))
          (setq cal-china-x-solar-term-alist
-               (append 
+               (append
                 (remove-if-not (lambda (i) (eq (caddar i) displayed-year))
                                cal-china-x-solar-term-alist)
                 (cal-china-x-solar-term-alist-new year)))
@@ -484,7 +484,7 @@ extra day appended."
 ;; When months are: '(11 12 1), '(12 1 2)
 (defun cal-china-x-cross-year-view-p ()
   (or (= displayed-month 12) (= displayed-month 1)))
-      
+
 ;; ,----
 ;; | week
 ;; `----
@@ -496,12 +496,12 @@ extra day appended."
 (defun cal-china-x-custom-week-of-date (date)
   "Similar to `cal-china-x-week-of-date' but starting from `cal-china-x-custom-week-start-date'."
   (let ((y (calendar-extract-year date)))
-    (when (or (< (calendar-extract-month date) 
-             (car cal-china-x-custom-week-start-date))
-          (< (calendar-extract-day date) 
-             (cadr cal-china-x-custom-week-start-date)))
-        (setq y (1- y)))
-    (ceiling (/ (cal-china-x-days-between 
+    (when (or (< (calendar-extract-month date)
+                 (car cal-china-x-custom-week-start-date))
+              (< (calendar-extract-day date)
+                 (cadr cal-china-x-custom-week-start-date)))
+      (setq y (1- y)))
+    (ceiling (/ (cal-china-x-days-between
                  date (append cal-china-x-custom-week-start-date (list y)))
                 7.0))))
 
