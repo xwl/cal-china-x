@@ -232,12 +232,16 @@ calendar."
   "Like `holiday-fixed', but with LUNAR-MONTH and LUNAR-DAY.
 
 When there are multiple days(like Run Yue or 闰月, e.g.,
-2006-08-30), we use NUM to define which day(s) as holidays. The
-rules are:
+2006-08-30, which is 07-07 in lunar calendar, the chinese
+valentine's day), we use NUM to define which day(s) as
+holidays. The rules are:
 
 NUM = 0, only the earlier day.
 NUM = 1, only the later day.
-NUM with other values(default), all days(maybe one or two)."
+NUM with other values(default), all days(maybe one or two).
+
+emacs23 introduces a similar `holiday-chinese', a quick test
+shows that it does not recognize Run Yue at all."
   (unless (integerp num)
     (setq num 2))
   (let* ((cn-years (calendar-chinese-year displayed-year))
