@@ -3,7 +3,7 @@
 ;; Copyright (C) 2006, 2007, 2008, 2009, 2010 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 2.2
+;; Version: 2.3a
 ;; Url: http://xwl.appspot.com/ref/cal-china-x.el
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -165,7 +165,7 @@ You can add this to your `calendar-holidays'.")
 ;;; Interfaces
 
 (defgroup cal-china-x nil
-  "China calendar extentions and more."
+  "Chinese calendar extentions and more."
   :group 'calendar)
 
 (defcustom cal-china-x-important-holidays '()
