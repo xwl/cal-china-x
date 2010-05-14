@@ -370,7 +370,11 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
          (calendar-mode-line-entry 'calendar-scroll-left "next month" ">")))
 
   (add-hook 'calendar-move-hook 'calendar-update-mode-line)
-  (add-hook 'calendar-initial-window-hook 'calendar-update-mode-line))
+  (add-hook 'calendar-initial-window-hook 'calendar-update-mode-line)
+
+  (defadvice mouse-set-point (after calendar-update-mode-line activate)
+    (when (eq major-mode 'calendar-mode)
+      (calendar-update-mode-line))))
 
 
 ;;; Implementations
