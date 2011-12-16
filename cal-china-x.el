@@ -1,6 +1,6 @@
 ;;; cal-china-x.el --- Chinese calendar extras
 
-;; Copyright (C) 2006, 2007, 2008, 2009, 2010 William Xu
+;; Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 2.3
@@ -244,7 +244,10 @@ emacs23 introduces a similar `holiday-chinese', a quick test
 shows that it does not recognize Run Yue at all."
   (unless (integerp num)
     (setq num 2))
-  (let* ((cn-years (calendar-chinese-year displayed-year))
+  (let* ((cn-years (calendar-chinese-year
+                    (if (eq displayed-month 12)
+                        (1+ displayed-year)
+                      displayed-year)))
          (ret (holiday-lunar-1
                (assoc lunar-month cn-years) lunar-day string)))
     (when (and (> (length cn-years) 12) (not (zerop num)))
