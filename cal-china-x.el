@@ -1,6 +1,6 @@
 ;;; cal-china-x.el --- Chinese calendar extras
 
-;; Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 William Xu
+;; Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 2.3
@@ -244,11 +244,20 @@ emacs23 introduces a similar `holiday-chinese', a quick test
 shows that it does not recognize Run Yue at all."
   (unless (integerp num)
     (setq num 2))
+  (let ((holiday (holiday-lunar-1 lunar-month lunar-day string num)))
+    (when (and (= lunar-day 30)         ; Some months only have 29 days.
+               (equal (holiday-lunar-1
+                       (if (= lunar-month 12) 1 (1+ lunar-month)) 1 string num)
+                      holiday))
+      (setq holiday (holiday-lunar-1 lunar-month (1- lunar-day) string num)))
+    holiday))
+
+(defun holiday-lunar-1 (lunar-month lunar-day string &optional num)
   (let* ((cn-years (calendar-chinese-year
                     (if (eq displayed-month 12)
                         (1+ displayed-year)
                       displayed-year)))
-         (ret (holiday-lunar-1
+         (ret (holiday-lunar-2
                (assoc lunar-month cn-years) lunar-day string)))
     (when (and (> (length cn-years) 12) (not (zerop num)))
       (let ((run-yue '())
@@ -261,7 +270,7 @@ shows that it does not recognize Run Yue at all."
             (setq run-yue i)
             (setq years nil)))
         (when (= lunar-month (floor (car run-yue)))
-          (setq ret (append ret (holiday-lunar-1
+          (setq ret (append ret (holiday-lunar-2
                                  run-yue lunar-day string))))))
     (cond ((= num 0)
            (when (car ret) (list (car ret))))
@@ -270,7 +279,7 @@ shows that it does not recognize Run Yue at all."
           (t
            ret))))
 
-(defun holiday-lunar-1 (run-yue lunar-day string)
+(defun holiday-lunar-2 (run-yue lunar-day string)
   (let* ((date (calendar-gregorian-from-absolute
                 (+ (cadr run-yue) (1- lunar-day))))
          (holiday (holiday-fixed (car date) (cadr date) string)))
@@ -342,7 +351,7 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
                 '(("[0-9]+年\\ *[0-9]+月" . font-lock-function-name-face))))
 
   (setq calendar-chinese-celestial-stem cal-china-x-celestial-stem
-	calendar-chinese-terrestrial-branch cal-china-x-terrestrial-branch)
+        calendar-chinese-terrestrial-branch cal-china-x-terrestrial-branch)
 
   (setq calendar-mode-line-format
         (list
