@@ -416,7 +416,7 @@ in a week."
   "Date of Chinese New Year."
   (let ((m displayed-month)
         (y displayed-year))
-    (increment-calendar-month m y 1)
+    (calendar-increment-month m y 1)
     (if (< m 5)
         (let ((chinese-new-year
                (calendar-gregorian-from-absolute
