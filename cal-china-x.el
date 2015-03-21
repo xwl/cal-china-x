@@ -1,10 +1,10 @@
-;;; cal-china-x.el --- Chinese calendar extras
+;;; cal-china-x.el --- Chinese localization, lunar/horoscope/zodiac info and more...
 
-;; Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011, 2012 William Xu
+;; Copyright (C) 2006-2013, 2015 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 2.3
-;; Url: http://xwl.appspot.com/ref/cal-china-x.el
+;; Version: 2.4
+;; Url: https://github.com/xwl/cal-china-x
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -70,8 +70,7 @@
   ["日" "一" "二" "三" "四" "五" "六"])
 
 (defconst cal-china-x-month-name
-  ["正月" "二月" "三月" "四月" "五月" "六月" "七月" "八月" "九月" "十月"
-   "十一月" "腊月"])
+  ["正月" "二月" "三月" "四月" "五月" "六月" "七月" "八月" "九月" "十月" "冬月" "腊月"])
 
 (defconst cal-china-x-day-name
   ["初一" "初二" "初三" "初四" "初五" "初六" "初七" "初八" "初九" "初十"
