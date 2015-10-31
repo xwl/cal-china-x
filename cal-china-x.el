@@ -5,6 +5,7 @@
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 2.4
 ;; Url: https://github.com/xwl/cal-china-x
+;; Package-Requires: ((cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -52,7 +53,7 @@
 (require 'calendar)
 (require 'holidays)
 (require 'cal-china)
-(eval-when-compile (require 'cl))
+(require 'cl-lib)
 
 ;;; Variables
 
@@ -298,7 +299,7 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
             terms (cdr terms))
       (when (string= (cdr i) solar-term)
         (let ((m (caar i))
-              (y (caddar i)))
+              (y (cl-caddar i)))
           ;; '(11 12 1), '(12 1 2)
           (when (or (and (cal-china-x-cross-year-view-p)
                          (or (and (= displayed-month 12)
@@ -325,8 +326,8 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
   (let* ((cn-date (calendar-chinese-from-absolute
                    (calendar-absolute-from-gregorian date)))
          (cn-year  (cadr   cn-date))
-         (cn-month (caddr  cn-date))
-         (cn-day   (cadddr cn-date)))
+         (cn-month (cl-caddr  cn-date))
+         (cn-day   (cl-cadddr cn-date)))
     (format "%s%s年%s%s%s(%s)%s"
             (calendar-chinese-sexagesimal-name cn-year)
             (aref cal-china-x-zodiac-name (% (1- cn-year) 12))
@@ -408,7 +409,7 @@ in a week."
              (end (cadr el)))
          (when (or (and (= month (car start)) (>= day (cadr start)))
                    (and (= month (car end)) (<= day (cadr end))))
-           (throw 'return (caddr el)))))
+           (throw 'return (cl-caddr el)))))
      cal-china-x-horoscope-name)))
 
 (defun holiday-chinese-new-year ()
@@ -433,17 +434,17 @@ in a week."
 
 (defun cal-china-x-solar-term-alist-new (year)
   "Return a solar-term alist for YEAR."
-  (loop for i from 0 upto 23
+  (cl-loop for i from 0 upto 23
 
-        for date = (cal-china-x-next-solar-term `(1 1 ,year))
-        then (setq date (cal-china-x-next-solar-term date))
+           for date = (cal-china-x-next-solar-term `(1 1 ,year))
+           then (setq date (cal-china-x-next-solar-term date))
 
-        with solar-term-alist = '()
+           with solar-term-alist = '()
 
-        collect (cons date (aref cal-china-x-solar-term-name i))
-        into solar-term-alist
+           collect (cons date (aref cal-china-x-solar-term-name i))
+           into solar-term-alist
 
-        finally return solar-term-alist))
+           finally return solar-term-alist))
 
 (defun cal-china-x-gregorian-from-astro (a)
   (calendar-gregorian-from-absolute
@@ -489,12 +490,12 @@ extra day appended."
         ((not (memq year cal-china-x-solar-term-years))
          (setq cal-china-x-solar-term-alist
                (append
-                (remove-if-not (lambda (i) (eq (caddar i) displayed-year))
-                               cal-china-x-solar-term-alist)
+                (cl-remove-if-not (lambda (i) (eq (cl-caddar i) displayed-year))
+                                  cal-china-x-solar-term-alist)
                 (cal-china-x-solar-term-alist-new year)))
          (setq cal-china-x-solar-term-years
-               (cons year (remove-if-not (lambda (i) (eq i displayed-year))
-                                         cal-china-x-solar-term-years))))))
+               (cons year (cl-remove-if-not (lambda (i) (eq i displayed-year))
+                                            cal-china-x-solar-term-years))))))
 
 ;; When months are: '(11 12 1), '(12 1 2)
 (defun cal-china-x-cross-year-view-p ()
@@ -548,10 +549,10 @@ N congruent to 1 gives the first name, N congruent to 2 gives the second name,
         (calendar-holidays cal-china-x-general-holidays))
     ad-do-it)
   (let ((calendar-holidays
-         (remove-if (lambda (i)
-                      (or (member i cal-china-x-important-holidays)
-                          (member i cal-china-x-general-holidays)))
-                    calendar-holidays)))
+         (cl-remove-if (lambda (i)
+                         (or (member i cal-china-x-important-holidays)
+                             (member i cal-china-x-general-holidays)))
+                       calendar-holidays)))
     ad-do-it))
 
 (defun calendar-generate-month (month year indent)
