@@ -47,6 +47,8 @@
 ;;; TODO:
 
 ;; - Display week day(the first line of each month) in chinese properly
+;;   It is a bit difficult to do nice alignment since it depends on the font
+;;   size of chinese characters and numbers.
 
 ;;; Code:
 
@@ -353,6 +355,10 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
   (setq calendar-chinese-celestial-stem cal-china-x-celestial-stem
         calendar-chinese-terrestrial-branch cal-china-x-terrestrial-branch)
 
+  (setq calendar-month-header '(propertize (format "%d年%2d月" year month)
+                                           'font-lock-face
+                                           'calendar-month-header))
+
   (setq calendar-mode-line-format
         (list
          (calendar-mode-line-entry 'calendar-scroll-right "previous month" "<")
@@ -554,64 +560,6 @@ N congruent to 1 gives the first name, N congruent to 2 gives the second name,
                              (member i cal-china-x-general-holidays)))
                        calendar-holidays)))
     ad-do-it))
-
-(defun calendar-generate-month (month year indent)
-  "Produce a calendar for MONTH, YEAR on the Gregorian calendar.
-The calendar is inserted at the top of the buffer in which point is currently
-located, but indented INDENT spaces.  The indentation is done from the first
-character on the line and does not disturb the first INDENT characters on the
-line."
-  (let ((blank-days               ; at start of month
-         (mod
-          (- (calendar-day-of-week (list month 1 year))
-             calendar-week-start-day)
-          7))
-        (last (calendar-last-day-of-month month year))
-        (trunc (min calendar-intermonth-spacing
-                    (1- calendar-left-margin)))
-        (day 1)
-        string)
-    (goto-char (point-min))
-    (calendar-move-to-column indent)
-    (insert
-     (calendar-string-spread
-      (list (format "%d年%2d月" year month))
-      ?\s calendar-month-digit-width))
-    (calendar-ensure-newline)
-    (calendar-insert-at-column indent calendar-intermonth-header trunc)
-    ;; Use the first two characters of each day to head the columns.
-    (dotimes (i 7)
-      (insert
-       (progn
-         (setq string
-               (calendar-day-name (mod (+ calendar-week-start-day i) 7) nil t))
-         ;; (cal-china-x-day-short-name (mod (+ calendar-week-start-day i) 7)))
-         (if enable-multibyte-characters
-             (truncate-string-to-width string calendar-day-header-width)
-           (substring string 0 calendar-day-header-width)))
-       (make-string (- calendar-column-width calendar-day-header-width) ?\s)))
-    (calendar-ensure-newline)
-    (calendar-insert-at-column indent calendar-intermonth-text trunc)
-    ;; Add blank days before the first of the month.
-    (insert (make-string (* blank-days calendar-column-width) ?\s))
-    ;; Put in the days of the month.
-    (dotimes (i last)
-      (setq day (1+ i))
-      ;; TODO should numbers be left-justified, centered...?
-      (insert (format (format "%%%dd%%s" calendar-day-digit-width) day
-                      (make-string
-                       (- calendar-column-width calendar-day-digit-width) ?\s)))
-      ;; 'date property prevents intermonth text confusing re-searches.
-      ;; (Tried intangible, it did not really work.)
-      (set-text-properties
-       (- (point) (1+ calendar-day-digit-width)) (1- (point))
-       `(mouse-face highlight help-echo ,(eval calendar-date-echo-text)
-                    date t))
-      (when (and (zerop (mod (+ day blank-days) 7))
-                 (/= day last))
-        (calendar-ensure-newline)
-        (setq day (1+ day))       ; first day of next week
-        (calendar-insert-at-column indent calendar-intermonth-text trunc)))))
 
 
 ;; setup
