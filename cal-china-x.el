@@ -59,6 +59,10 @@
 
 ;;; Variables
 
+(defconst cal-china-x-dir (if load-file-name
+                              (file-name-directory load-file-name)
+                            ""))
+
 ;; Bound in calendar-generate.
 (defvar displayed-month)
 (defvar displayed-year)
@@ -302,7 +306,8 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
       (when (string= (cdr i) solar-term)
         (let ((m (caar i))
               (y (cl-caddar i)))
-          ;; '(11 12 1), '(12 1 2)
+          ;; displayed-year, displayed-month is accurate for the centered month
+          ;; only. Cross year view: '(11 12 1), '(12 1 2)
           (when (or (and (cal-china-x-cross-year-view-p)
                          (or (and (= displayed-month 12)
                                   (= m 1)
@@ -440,17 +445,38 @@ in a week."
 
 (defun cal-china-x-solar-term-alist-new (year)
   "Return a solar-term alist for YEAR."
-  (cl-loop for i from 0 upto 23
+  ;; use cached values (china time zone +0800)
+  (let ((cached-jieqi-file (expand-file-name (concat cal-china-x-dir "/jieqi.txt"))))
+    (if (and (> year 1900)
+             (< year 2101)
+             (file-exists-p cached-jieqi-file))
+        (let ((solar-term-alist '())
+              (year (number-to-string year)))
+          (with-temp-buffer
+            (insert-file-contents cached-jieqi-file)
+            (goto-char (point-min))
+            (while (search-forward year nil t 1)
+              (let* ((str (buffer-substring (line-beginning-position) (line-end-position)))
+                     (lst (split-string str))
+                     (jieqi (nth 0 lst))
+                     (y (string-to-number (nth 1 lst)))
+                     (m (string-to-number (nth 2 lst)))
+                     (d (string-to-number (nth 3 lst))))
+                (setq solar-term-alist (cons (cons (list m d y) jieqi)
+                                             solar-term-alist)))))
+          solar-term-alist)
+      ;; calculation may have one day difference.
+      (cl-loop for i from 0 upto 23
 
-           for date = (cal-china-x-next-solar-term `(1 1 ,year))
-           then (setq date (cal-china-x-next-solar-term date))
+             for date = (cal-china-x-next-solar-term `(1 1 ,year))
+             then (setq date (cal-china-x-next-solar-term date))
 
-           with solar-term-alist = '()
+             with solar-term-alist = '()
 
-           collect (cons date (aref cal-china-x-solar-term-name i))
-           into solar-term-alist
+             collect (cons date (aref cal-china-x-solar-term-name i))
+             into solar-term-alist
 
-           finally return solar-term-alist))
+             finally return solar-term-alist))))
 
 (defun cal-china-x-gregorian-from-astro (a)
   (calendar-gregorian-from-absolute
