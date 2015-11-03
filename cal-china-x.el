@@ -543,17 +543,21 @@ extra day appended."
 
 (defun cal-china-x-custom-week-of-date (date)
   "Similar to `cal-china-x-week-of-date' but starting from `cal-china-x-custom-week-start-date'."
-  (let ((y (calendar-extract-year date)))
-    (when (or (< (calendar-extract-month date)
-                 (car cal-china-x-custom-week-start-date))
-              (< (calendar-extract-day date)
-                 (cadr cal-china-x-custom-week-start-date)))
-      (setq y (1- y)))
-    (ceiling (/ (cal-china-x-days-between
-                 date (append cal-china-x-custom-week-start-date (list y)))
-                7.0))))
+  (let* ((y (calendar-extract-year  date))
+         (m (calendar-extract-month date))
+         (d (calendar-extract-day   date))
+         (start-date `(,@cal-china-x-custom-week-start-date ,y))
+         (start-month (calendar-extract-month start-date))
+         (start-day   (calendar-extract-day start-date)))
 
-(defun cal-china-x-days-between (date1 date2)
+    (when (or (< m start-month)
+              (and (= m start-month) (< d start-day)))
+      (setq start-date (list (car start-date) (cadr start-date) (1- y))))
+
+    (1+ (/ (cal-china-x-days-diff date start-date) 7))))
+
+(defun cal-china-x-days-diff (date1 date2)
+  "date1 - date2 = ?"
   (apply '- (mapcar 'calendar-absolute-from-gregorian (list date1 date2))))
 
 
