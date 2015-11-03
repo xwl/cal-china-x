@@ -30,6 +30,7 @@
 ;;   - Define holidays using `holiday-lunar', `holiday-solar-term'
 ;;   - Highlight holidays based on different priorities
 ;;   - Add `cal-china-x-chinese-holidays', `cal-china-x-japanese-holidays'.
+;;   - custom week diary(like weeks in school)
 ;;
 ;; To use, add something like the following to your .emacs:
 ;;     (require 'cal-china-x)
