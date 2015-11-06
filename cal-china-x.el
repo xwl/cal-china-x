@@ -372,7 +372,7 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
 
          '(cal-china-x-get-holiday date)
 
-         '(concat (calendar-date-string date t)
+         '(concat " " (calendar-date-string date t)
                   (format " 第%d周"
                           (funcall (if cal-china-x-custom-week-start-date
                                        'cal-china-x-custom-week-of-date
