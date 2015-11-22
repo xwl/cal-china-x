@@ -3,7 +3,7 @@
 ;; Copyright (C) 2006-2013, 2015 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 2.4
+;; Version: 2.5
 ;; Url: https://github.com/xwl/cal-china-x
 ;; Package-Requires: ((cl-lib "0.5"))
 
@@ -45,11 +45,12 @@
 ;; This is an early derived work from `chinese-calendar.el' written by
 ;; Charles Wang <charleswang@peoplemail.com.cn>.
 
-;;; TODO:
+;;; Note:
 
 ;; - Display week day(the first line of each month) in chinese properly
 ;;   It is a bit difficult to do nice alignment since it depends on the font
-;;   size of chinese characters and numbers.
+;;   size of chinese characters and numbers. But some manages to do it:
+;;     https://github.com/xwl/cal-china-x/issues/3
 
 ;;; Code:
 
