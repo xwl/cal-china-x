@@ -254,19 +254,18 @@ shows that it does not recognize Run Yue at all."
     (setq num 2))
   (let ((holiday (holiday-lunar-1 lunar-month lunar-day string num)))
     (when (and (= lunar-day 30)         ; Some months only have 29 days.
-               (equal (holiday-lunar-1
-                       (if (= lunar-month 12) 1 (1+ lunar-month)) 1 string num)
+               (equal (holiday-lunar-1 (if (= lunar-month 12) 1 (1+ lunar-month))
+                                       1 string num)
                       holiday))
       (setq holiday (holiday-lunar-1 lunar-month (1- lunar-day) string num)))
     holiday))
 
 (defun holiday-lunar-1 (lunar-month lunar-day string &optional num)
-  (let* ((cn-years (calendar-chinese-year
-                    (if (eq displayed-month 12)
+  (let* ((cn-years (calendar-chinese-year ; calendar-chinese-year counts from 12 for last year
+                    (if (and (eq displayed-month 12) (eq lunar-month 12))
                         (1+ displayed-year)
                       displayed-year)))
-         (ret (holiday-lunar-2
-               (assoc lunar-month cn-years) lunar-day string)))
+         (ret (holiday-lunar-2 (assoc lunar-month cn-years) lunar-day string)))
     (when (and (> (length cn-years) 12) (not (zerop num)))
       (let ((run-yue '())
             (years cn-years)
