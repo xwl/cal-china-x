@@ -365,6 +365,12 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
                                            'font-lock-face
                                            'calendar-month-header))
 
+  ;; if chinese font width equals to twice of ascii font
+  (eval-after-load 'chinese-fonts-setup
+    '(progn
+       (setq calendar-day-header-array cal-china-x-days)
+       ))
+
   (setq calendar-mode-line-format
         (list
          (calendar-mode-line-entry 'calendar-scroll-right "previous month" "<")
