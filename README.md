@@ -13,4 +13,6 @@ Here is a screenshot:
 
 ![chinese calendar](/../screenshot/cal-china-x.png?raw=true "")
 
-Also available in [melpa](http://melpa.org)
+Also available in [melpa](http://melpa.org) .
+
+For aligning Chinese and English font, [chinese-fonts-setup](https://github.com/tumashu/chinese-fonts-setup) may be helpful.
