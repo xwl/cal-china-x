@@ -402,9 +402,9 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
   (add-hook 'calendar-move-hook 'calendar-update-mode-line)
   (add-hook 'calendar-initial-window-hook 'calendar-update-mode-line)
 
-  (defadvice mouse-set-point (after calendar-update-mode-line activate)
-    (when (eq major-mode 'calendar-mode)
-      (calendar-update-mode-line))))
+  (advice-add 'calendar-mark-holidays :around 'cal-china-x-mark-holidays)
+  (advice-add 'mouse-set-point :after 'cal-china-x-mouse-set-point)
+  )
 
 
 ;;; Implementations
@@ -583,20 +583,25 @@ N congruent to 1 gives the first name, N congruent to 2 gives the second name,
           (aref calendar-chinese-celestial-stem (% (1- n) 10))
           (aref calendar-chinese-terrestrial-branch (% (1- n) 12))))
 
-(defadvice calendar-mark-holidays (around mark-different-holidays activate)
-  "Mark holidays with different priorities."
-  (let ((calendar-holiday-marker 'cal-china-x-important-holiday-face)
-        (calendar-holidays cal-china-x-important-holidays))
-    ad-do-it)
+(defun cal-china-x-remove-exising-overlays (beg end &rest args)
+  (remove-overlays beg end))
+
+(defun cal-china-x-mark-holidays (orig-fun &rest args)
+  "Mark prioritized holidays with different colors."
+  (apply orig-fun args)
+
+  (advice-add 'make-overlay :before 'cal-china-x-remove-exising-overlays)
   (let ((calendar-holiday-marker 'cal-china-x-general-holiday-face)
         (calendar-holidays cal-china-x-general-holidays))
-    ad-do-it)
-  (let ((calendar-holidays
-         (cl-remove-if (lambda (i)
-                         (or (member i cal-china-x-important-holidays)
-                             (member i cal-china-x-general-holidays)))
-                       calendar-holidays)))
-    ad-do-it))
+    (apply orig-fun args))
+  (let ((calendar-holiday-marker 'cal-china-x-important-holiday-face)
+        (calendar-holidays cal-china-x-important-holidays))
+    (apply orig-fun args))
+  (advice-remove 'make-overlay 'cal-china-x-remove-exising-overlays))
+
+(defun cal-china-x-mouse-set-point (after &rest args)
+    (when (eq major-mode 'calendar-mode)
+      (calendar-update-mode-line)))
 
 
 ;; setup
