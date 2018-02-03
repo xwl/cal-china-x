@@ -219,6 +219,14 @@ as schools, where people may use some specific school diary."
   :type 'symbol
   :group 'cal-china-x)
 
+(defcustom cal-china-x-force-chinese-week-day nil
+  "Force using chinese week day, even though it may not align nicely.
+
+Default is nil. The chinese week day will be enabled automatically if
+the package 'cnfonts (old name: 'chinese-fonts-setup) is loaded."
+  :type 'boolean
+  :group 'cal-china-x)
+
 ;;;###autoload
 (defun cal-china-x-birthday-from-chinese (lunar-month lunar-day)
   "Return birthday date this year in Gregorian form.
@@ -364,11 +372,18 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
                                            'font-lock-face
                                            'calendar-month-header))
 
-  ;; if chinese font width equals to twice of ascii font
-  (eval-after-load 'chinese-fonts-setup
-    '(progn
-       (setq calendar-day-header-array cal-china-x-days)
-       ))
+  (if cal-china-x-force-chinese-week-day
+      (setq calendar-day-header-array cal-china-x-days)
+
+    (eval-after-load 'chinese-fonts-setup ; older name of cnfonts, to be removed
+      '(progn
+         (setq calendar-day-header-array cal-china-x-days)
+         ))
+
+    (eval-after-load 'cnfonts
+      '(progn
+         (setq calendar-day-header-array cal-china-x-days)
+         )))
 
   (setq calendar-mode-line-format
         (list
