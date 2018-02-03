@@ -3,7 +3,7 @@
 ;; Copyright (C) 2006-2013, 2015 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 2.5
+;; Version: 2.6b
 ;; Url: https://github.com/xwl/cal-china-x
 ;; Package-Requires: ((cl-lib "0.5"))
 
@@ -357,11 +357,6 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
 
   (setq diary-date-forms chinese-date-diary-pattern)
 
-  ;; chinese month and year
-  (setq calendar-font-lock-keywords
-        (append calendar-font-lock-keywords
-                '(("[0-9]+年\\ *[0-9]+月" . font-lock-function-name-face))))
-
   (setq calendar-chinese-celestial-stem cal-china-x-celestial-stem
         calendar-chinese-terrestrial-branch cal-china-x-terrestrial-branch)
 
@@ -405,6 +400,13 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
 
   (add-hook 'calendar-move-hook 'calendar-update-mode-line)
   (add-hook 'calendar-initial-window-hook 'calendar-update-mode-line)
+
+  (add-hook 'calendar-mode-hook
+            (lambda ()
+              (set (make-local-variable 'font-lock-defaults)
+                   ;; chinese month and year
+                   '((("[0-9]+年\\ *[0-9]+月" . font-lock-function-name-face)) t))
+              ))
 
   (advice-add 'calendar-mark-holidays :around 'cal-china-x-mark-holidays)
   (advice-add 'mouse-set-point :after 'cal-china-x-mouse-set-point)
