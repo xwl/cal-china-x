@@ -229,23 +229,32 @@ the package 'cnfonts (old name: 'chinese-fonts-setup) is loaded."
 
 ;;;###autoload
 (defun cal-china-x-birthday-from-chinese (lunar-month lunar-day)
-  "Return birthday date this year in Gregorian form.
+  "Return next birthday date in Gregorian form.
 
 LUNAR-MONTH and LUNAR-DAY are date number used in chinese lunar
 calendar."
   (interactive "nlunar month: \nnlunar day: ")
-  (let* ((birthday-chinese (list lunar-month lunar-day))
-	 (current-chinese-date (calendar-chinese-from-absolute
-				(calendar-absolute-from-gregorian
-				 (calendar-current-date))))
-	 (cycle (car current-chinese-date))
-	 (year (cadr current-chinese-date))
-	 (birthday-chinese-full `(,cycle ,year ,@birthday-chinese))
-	 (birthday-gregorian-full (calendar-gregorian-from-absolute
-				   (calendar-chinese-to-absolute
-				    birthday-chinese-full))))
+  (let* ((current-chinese-date (calendar-chinese-from-absolute
+                                (calendar-absolute-from-gregorian
+                                 (calendar-current-date))))
+         (cycle (car current-chinese-date))
+         (year (cadr current-chinese-date))
+         (birthday-gregorian-full
+          (cal-china-x-birthday-from-chinese-1
+           cycle year lunar-month lunar-day)))
+    ;; If it is before current date, calculate next year.
+    (when (calendar-date-compare (list birthday-gregorian-full)
+                                 (list (calendar-current-date)))
+      (setq birthday-gregorian-full
+            (cal-china-x-birthday-from-chinese-1
+             cycle (1+ year) lunar-month lunar-day)))
     (message "Your next birthday in gregorian is on %s"
-	     (calendar-date-string birthday-gregorian-full))))
+             (calendar-date-string birthday-gregorian-full))))
+
+(defun cal-china-x-birthday-from-chinese-1 (cycle year lunar-month lunar-day)
+  (calendar-gregorian-from-absolute
+   (calendar-chinese-to-absolute
+    (list cycle year lunar-month lunar-day))))
 
 ;;;###autoload
 (defun holiday-lunar (lunar-month lunar-day string &optional num)
