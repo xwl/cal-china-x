@@ -227,6 +227,11 @@ the package 'cnfonts (old name: 'chinese-fonts-setup) is loaded."
   :type 'boolean
   :group 'cal-china-x)
 
+(defcustom cal-china-x-always-show-jieqi nil
+  "When t, always show Jieqi on the mode line; else only on the starting day."
+  :type 'boolean
+  :group 'cal-china-x)
+
 ;;;###autoload
 (defun cal-china-x-birthday-from-chinese (lunar-month lunar-day)
   "Return next birthday date in Gregorian form.
@@ -357,14 +362,14 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
          (cn-year  (cadr   cn-date))
          (cn-month (cl-caddr  cn-date))
          (cn-day   (cl-cadddr cn-date)))
-    (format "%s%s年%s%s%s(%s)%s"
+    (format "%s%s年%s%s%s%s(%s)"
             (calendar-chinese-sexagesimal-name cn-year)
             (aref cal-china-x-zodiac-name (% (1- cn-year) 12))
             (aref cal-china-x-month-name (1-  (floor cn-month)))
             (if (integerp cn-month) "" "(闰月)")
             (aref cal-china-x-day-name (1- cn-day))
-            (cal-china-x-get-horoscope (car date) (cadr date))
-            (cal-china-x-get-solar-term date))))
+            (cal-china-x-get-solar-term date)
+            (cal-china-x-get-horoscope (car date) (cadr date)))))
 
 (defun cal-china-x-setup ()
   (setq calendar-date-display-form
@@ -476,9 +481,15 @@ in a week."
                            (+ y 57))))))))))
 
 (defun cal-china-x-get-solar-term (date)
-  (let ((year (calendar-extract-year date)))
+  (let ((year (calendar-extract-year date))
+        (absolute-date (calendar-absolute-from-gregorian date)))
     (cal-china-x-sync-solar-term year)
-    (or (cdr (assoc date cal-china-x-solar-term-alist)) "")))
+    (if cal-china-x-always-show-jieqi
+        ;; Hmm, better binary search, but need to use vec then.
+        (loop for i in cal-china-x-solar-term-alist
+              until (>= absolute-date (calendar-absolute-from-gregorian (car i)))
+              finally return (cdr i))
+      (or (cdr (assoc date cal-china-x-solar-term-alist)) ""))))
 
 (defun cal-china-x-solar-term-alist-new (year)
   "Return a solar-term alist for YEAR."
@@ -564,7 +575,11 @@ extra day appended."
                 (cal-china-x-solar-term-alist-new year)))
          (setq cal-china-x-solar-term-years
                (cons year (cl-remove-if-not (lambda (i) (eq i displayed-year))
-                                            cal-china-x-solar-term-years))))))
+                                            cal-china-x-solar-term-years)))))
+  (setq cal-china-x-solar-term-alist
+        (sort cal-china-x-solar-term-alist
+              (lambda (a b) (> (calendar-absolute-from-gregorian (car a))
+                          (calendar-absolute-from-gregorian (car b)))))))
 
 ;; When months are: '(11 12 1), '(12 1 2)
 (defun cal-china-x-cross-year-view-p ()
