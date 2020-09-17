@@ -486,7 +486,7 @@ in a week."
     (cal-china-x-sync-solar-term year)
     (if cal-china-x-always-show-jieqi
         ;; Hmm, better binary search, but need to use vec then.
-        (loop for i in cal-china-x-solar-term-alist
+        (cl-loop for i in cal-china-x-solar-term-alist
               until (>= absolute-date (calendar-absolute-from-gregorian (car i)))
               finally return (cdr i))
       (or (cdr (assoc date cal-china-x-solar-term-alist)) ""))))
