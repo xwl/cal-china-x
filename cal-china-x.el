@@ -232,6 +232,10 @@ the package 'cnfonts (old name: 'chinese-fonts-setup) is loaded."
   :type 'boolean
   :group 'cal-china-x)
 
+;; cached solar terms for two neighbour years at most.
+(defvar cal-china-x-solar-term-alist nil) ; e.g., '(((1 20 2008) "春分") ...)
+(defvar cal-china-x-solar-term-years nil)
+
 ;;;###autoload
 (defun cal-china-x-birthday-from-chinese (lunar-month lunar-day)
   "Return next birthday date in Gregorian form.
@@ -552,10 +556,6 @@ extra day appended."
         (when (equal (car i) date)
           (setq str (concat str " " (cadr i)))))
       str)))
-
-;; cached solar terms for two neighbour years at most.
-(defvar cal-china-x-solar-term-alist nil) ; e.g., '(((1 20 2008) "春分") ...)
-(defvar cal-china-x-solar-term-years nil)
 
 (defun cal-china-x-sync-solar-term (year)
   "Sync `cal-china-x-solar-term-alist' and `cal-china-x-solar-term-years' to YEAR."
