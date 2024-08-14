@@ -13,6 +13,7 @@ To use, add something like the following to your .emacs:
 
     (require 'cal-china-x)
     (setq calendar-mark-holidays-flag t)
+    ;; (setq mark-holidays-in-calendar t) ; before emacs-25
     (setq cal-china-x-important-holidays cal-china-x-chinese-holidays)
     (setq cal-china-x-general-holidays '((holiday-lunar 1 15 "元宵节")))
     (setq calendar-holidays
