@@ -294,7 +294,9 @@ shows that it does not recognize Run Yue at all."
   (let* ((cn-years (calendar-chinese-year ; calendar-chinese-year counts from 12 for last year
                     (if (and (eq displayed-month 12) (eq lunar-month 12))
                         (1+ displayed-year)
-                      displayed-year)))
+                      (if (and (<= displayed-month 2) (or (eq lunar-month 10) (eq lunar-month 11)))
+                          (1- displayed-year)
+                        displayed-year))))
          (ret (holiday-lunar-2 (assoc lunar-month cn-years) lunar-day string)))
     (when (and (> (length cn-years) 12) (not (zerop num)))
       (let ((run-yue '())
