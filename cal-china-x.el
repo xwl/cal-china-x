@@ -3,7 +3,7 @@
 ;; Copyright (C) 2006-2013, 2015 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 2.6b
+;; Version: 2.7
 ;; Url: https://github.com/xwl/cal-china-x
 ;; Package-Requires: ((cl-lib "0.5"))
 
@@ -280,23 +280,24 @@ NUM with other values(default), all days(maybe one or two).
 
 emacs23 introduces a similar `holiday-chinese', a quick test
 shows that it does not recognize Run Yue at all."
-  (unless (integerp num)
-    (setq num 2))
-  (let ((holiday (holiday-lunar-1 lunar-month lunar-day string num)))
-    (when (and (= lunar-day 30)         ; Some months only have 29 days.
-               (equal (holiday-lunar-1 (if (= lunar-month 12) 1 (1+ lunar-month))
-                                       1 string num)
-                      holiday))
-      (setq holiday (holiday-lunar-1 lunar-month (1- lunar-day) string num)))
-    holiday))
+  (let* ((num (or num 2))
+         (holiday (holiday-lunar-1 lunar-month lunar-day string num)))
+    (if (and (= lunar-day 30) ; Chuxi(除夕) can be on 30th or 29th of lunar day.
+             (equal (holiday-lunar-1 (if (= lunar-month 12) 1 (1+ lunar-month))
+                                     1 string num)
+                    holiday))
+        (holiday-lunar-1 lunar-month (1- lunar-day) string num)
+      holiday)))
 
 (defun holiday-lunar-1 (lunar-month lunar-day string &optional num)
-  (let* ((cn-years (calendar-chinese-year ; calendar-chinese-year counts from 12 for last year
-                    (if (and (eq displayed-month 12) (eq lunar-month 12))
-                        (1+ displayed-year)
-                      (if (and (<= displayed-month 2) (or (eq lunar-month 10) (eq lunar-month 11)))
-                          (1- displayed-year)
-                        displayed-year))))
+  (let* ((cn-years
+          (calendar-chinese-year
+           (cond ((and (eq displayed-month 12) (eq lunar-month 12)) ; calendar-chinese-year counts from 12 for last year
+                  (1+ displayed-year))
+                 ((and (<= displayed-month 2) (or (eq lunar-month 10) (eq lunar-month 11)))
+                  (1- displayed-year))
+                 (t
+                  displayed-year))))
          (ret (holiday-lunar-2 (assoc lunar-month cn-years) lunar-day string)))
     (when (and (> (length cn-years) 12) (not (zerop num)))
       (let ((run-yue '())
