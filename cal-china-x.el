@@ -456,6 +456,7 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
               ))
 
   (advice-add 'calendar-mark-holidays :around 'cal-china-x-mark-holidays)
+  (advice-add 'calendar-redraw :after 'calendar-update-mode-line)
   (advice-add 'calendar-set-date-style :after 'cal-china-x-set-date-style)
   (advice-add 'mouse-set-point :after 'cal-china-x-mouse-set-point)
   )
