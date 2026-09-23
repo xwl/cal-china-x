@@ -5,7 +5,7 @@
 ;; Author: William Xu <william.xwl@gmail.com>
 ;; Version: 2.7
 ;; Url: https://github.com/xwl/cal-china-x
-;; Package-Requires: ((cl-lib "0.5"))
+;; Package-Requires: ((emacs "24.4") (cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -42,8 +42,6 @@
 ;;                   cal-china-x-general-holidays
 ;;                   other-holidays))
 ;;
-;; Note: for emacs22, please use version 1.1.
-
 ;;; History
 
 ;; This is an early derived work from `chinese-calendar.el' written by
@@ -94,15 +92,9 @@
 (defun cal-china-x-chinese-date-diary-pattern ()
   "Return `diary-date-forms' for the current `calendar-date-style'."
   `((year "年" month "月" day "日" " 星期[" ,(mapconcat 'identity cal-china-x-days "") "]")
-    ,@(if (> emacs-major-version 22)
-          (cond ((eq calendar-date-style 'iso) diary-iso-date-forms)
-                ((eq calendar-date-style 'european) diary-european-date-forms)
-                (t diary-american-date-forms))
-        '((month "[-/]" day "[^-/0-9]")
-          (year "[-/]" month "[-/]" day "[^0-9]")
-          (monthname "-" day "[^-0-9]")
-          (year "-" monthname "-" day "[^0-9]")
-          (dayname "\\W")))))
+    ,@(cond ((eq calendar-date-style 'iso) diary-iso-date-forms)
+            ((eq calendar-date-style 'european) diary-european-date-forms)
+            (t diary-american-date-forms))))
 
 (defconst cal-china-x-horoscope-name
   '(((3  21) (4  19) "白羊")
