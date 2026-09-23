@@ -91,10 +91,13 @@
    "廿一" "廿二" "廿三" "廿四" "廿五" "廿六" "廿七" "廿八" "廿九" "三十"
    "卅一" "卅二" "卅三" "卅四" "卅五" "卅六" "卅七" "卅八" "卅九" "卅十"])
 
-(defvar chinese-date-diary-pattern
+(defun cal-china-x-chinese-date-diary-pattern ()
+  "Return `diary-date-forms' for the current `calendar-date-style'."
   `((year "年" month "月" day "日" " 星期[" ,(mapconcat 'identity cal-china-x-days "") "]")
     ,@(if (> emacs-major-version 22)
-          diary-iso-date-forms
+          (cond ((eq calendar-date-style 'iso) diary-iso-date-forms)
+                ((eq calendar-date-style 'european) diary-european-date-forms)
+                (t diary-american-date-forms))
         '((month "[-/]" day "[^-/0-9]")
           (year "[-/]" month "[-/]" day "[^0-9]")
           (monthname "-" day "[^-0-9]")
@@ -378,20 +381,28 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
             (cal-china-x-get-solar-term date)
             (cal-china-x-get-horoscope (car date) (cadr date)))))
 
-(defun cal-china-x-setup ()
+(defun cal-china-x-set-localizations ()
+  "Re-apply the Chinese localizations to calendar display and diary forms."
   (setq calendar-date-display-form
-	'((cal-china-x-calendar-display-form
+        '((cal-china-x-calendar-display-form
            (mapcar (lambda (el) (string-to-number el))
                    (list month day year)))))
+  (setq diary-date-forms (cal-china-x-chinese-date-diary-pattern))
+  (setq calendar-month-header '(propertize (format "%d年%2d月" year month)
+                                           'font-lock-face
+                                           'calendar-month-header)))
 
-  (setq diary-date-forms chinese-date-diary-pattern)
+(defun cal-china-x-set-date-style (&rest _args)
+  "Re-apply Chinese localizations after `calendar-set-date-style', then redraw."
+  (cal-china-x-set-localizations)
+  (calendar-redraw)
+  (calendar-update-mode-line))
+
+(defun cal-china-x-setup ()
+  (cal-china-x-set-localizations)
 
   (setq calendar-chinese-celestial-stem cal-china-x-celestial-stem
         calendar-chinese-terrestrial-branch cal-china-x-terrestrial-branch)
-
-  (setq calendar-month-header '(propertize (format "%d年%2d月" year month)
-                                           'font-lock-face
-                                           'calendar-month-header))
 
   (if cal-china-x-force-chinese-week-day
       (setq calendar-day-header-array cal-china-x-days)
@@ -445,6 +456,7 @@ See `cal-china-x-solar-term-name' for a list of solar term names ."
               ))
 
   (advice-add 'calendar-mark-holidays :around 'cal-china-x-mark-holidays)
+  (advice-add 'calendar-set-date-style :after 'cal-china-x-set-date-style)
   (advice-add 'mouse-set-point :after 'cal-china-x-mouse-set-point)
   )
 
