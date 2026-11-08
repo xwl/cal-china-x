@@ -3,7 +3,7 @@
 ;; Copyright (C) 2006-2013, 2015 William Xu
 
 ;; Author: William Xu <william.xwl@gmail.com>
-;; Version: 2.7
+;; Version: 2.8
 ;; Url: https://github.com/xwl/cal-china-x
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.5"))
 
